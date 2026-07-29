@@ -24,7 +24,7 @@ else:
 DEBUG = not PRODUCTION
 
 if PRODUCTION:
-    ALLOWED_HOSTS = ['buyaah.dk', 'www.buyaah.dk']
+    ALLOWED_HOSTS = ['rethrow.dk', 'www.rethrow.dk']
 else:
     ALLOWED_HOSTS = []
 
@@ -138,6 +138,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+# collectstatic's output (production only) — separate from STATICFILES_DIRS above,
+# which holds the source files (vendored Bootstrap/htmx, quiz.css).
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (uploaded MP3 clips and interlude images).
 # In production these are served by PythonAnywhere's static file mappings.

@@ -4,6 +4,7 @@ db.sqlite3
 media/
 .claude/
 .env
+staticfiles/
 
 *.log
 .DS_Store
