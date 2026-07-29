@@ -1,11 +1,18 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Production is selected by setting PRODUCTION=1 in the environment (done in the
-# PythonAnywhere WSGI file). Doing nothing gives the safe dev defaults.
+# Local/production secrets live in a .env file next to manage.py (not committed to
+# git). Loading it here is a no-op if the file doesn't exist, so dev without a
+# .env still works with the defaults below.
+load_dotenv(BASE_DIR / '.env')
+
+# Production is selected by setting PRODUCTION=1 in the environment (via the
+# .env file). Doing nothing gives the safe dev defaults.
 PRODUCTION = os.environ.get('PRODUCTION') == '1'
 
 # SECURITY WARNING: keep the secret key used in production secret!

@@ -3,6 +3,7 @@ __pycache__/
 db.sqlite3
 media/
 .claude/
+.env
 
 *.log
 .DS_Store
