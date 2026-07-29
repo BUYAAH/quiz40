@@ -1,0 +1,40 @@
+{# Guest state fragment. Re-polls itself; server returns 204 while the open #}
+{# round hasn't changed, so form input is never wiped mid-typing. #}
+<div id="drinky-state"
+     hx-get="{% url 'drinky:status' %}?s={{ state_token }}"
+     hx-trigger="every 2s"
+     hx-swap="outerHTML">
+
+  {% if not round %}
+    <div class="text-center py-5">
+      <p class="lead mt-3">Intet åbent lige nu.</p>
+      <p class="text-secondary">Hold øje – værten åbner en ny runde snart.</p>
+    </div>
+
+  {% elif reading %}
+    <div class="text-center py-5">
+      <p class="lead mt-3">{{ round }}</p>
+      <p class="fs-4">Du har indtastet <strong>{{ reading.value }}</strong> promille.</p>
+      <p class="text-secondary">Tak! Vent på næste runde.</p>
+      <a href="{% url 'pages:home' %}">Tilbage til forsiden</a>
+    </div>
+
+  {% else %}
+    <form hx-post="{% url 'drinky:submit' %}" hx-target="#drinky-state" hx-swap="outerHTML">
+      {% csrf_token %}
+      <h2 class="h5 mb-3">{{ round }} – hvad viser din blæser?</h2>
+      <p class="text-secondary small mb-2">
+        Tip: skyl munden med en alkoholfri drik lige inden du blæser – det giver
+        den mest korrekte måling.
+      </p>
+      <input type="text" class="form-control form-control-lg mb-3" name="value"
+             inputmode="decimal" placeholder="fx 1.23" required>
+      <div class="alert alert-info py-2 small mb-3">
+        Svar ærligt – det gør det sjovest for alle. Ingen ser dit navn: tallene
+        vises kun som generel statistik.
+      </div>
+      {% if error %}<div class="alert alert-warning py-2">{{ error }}</div>{% endif %}
+      <button type="submit" class="btn btn-primary btn-lg w-100">Gem</button>
+    </form>
+  {% endif %}
+</div>

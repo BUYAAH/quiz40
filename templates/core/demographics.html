@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Om dig – Fødselsdagsfesten{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 26rem;">
+  <div class="text-center mb-4">
+    <h1 class="display-6">Lidt om dig</h1>
+    <p class="text-secondary">Fire hurtige spørgsmål – dem skal vi bruge til noget sjovt senere i aften.</p>
+  </div>
+  <form method="post" class="card shadow-sm">
+    <div class="card-body">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <label for="age" class="form-label">Alder</label>
+      <input type="number" class="form-control form-control-lg mb-3" id="age" name="age"
+             min="25" max="75" inputmode="numeric" required
+             value="{% if player.age is not None %}{{ player.age }}{% endif %}">
+
+      <label for="gender" class="form-label">Køn</label>
+      <select class="form-select form-select-lg mb-3" id="gender" name="gender" required>
+        <option value="" {% if not player.gender %}selected{% endif %} disabled>Vælg…</option>
+        {% for value, label in genders %}
+          <option value="{{ value }}" {% if player.gender == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="kids" class="form-label">Antal børn</label>
+      <input type="number" class="form-control form-control-lg mb-3" id="kids" name="kids"
+             min="0" max="4" inputmode="numeric" required
+             value="{% if player.kids is not None %}{{ player.kids }}{% endif %}">
+
+      <label for="relation" class="form-label">Din relation til fødselaren</label>
+      <select class="form-select form-select-lg mb-3" id="relation" name="relation" required>
+        <option value="" {% if not player.relation %}selected{% endif %} disabled>Vælg…</option>
+        {% for value, label in relations %}
+          <option value="{{ value }}" {% if player.relation == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      {% if error %}<div class="alert alert-warning py-2">{{ error }}</div>{% endif %}
+      <button type="submit" class="btn btn-primary btn-lg w-100">Gem</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

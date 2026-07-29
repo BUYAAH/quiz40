@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Spil – Fødselsdagsquiz{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 30rem;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="fw-bold">{{ quiz.name }}</span>
+    <span class="badge text-bg-secondary">{{ player.nickname }}</span>
+  </div>
+  <div hx-get="{% url 'core:play_state' %}" hx-trigger="load" hx-swap="outerHTML">
+    <div class="text-center text-secondary py-5">Indlæser…</div>
+  </div>
+</div>
+{% endblock %}

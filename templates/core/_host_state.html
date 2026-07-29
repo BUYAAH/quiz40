@@ -1,0 +1,75 @@
+{# Host control fragment: current state, answered counter, and the next action. #}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <span class="badge fs-6
+        {% if quiz.state == 'open' %}text-bg-success
+        {% elif quiz.state == 'revealed' %}text-bg-info
+        {% elif quiz.state == 'finished' %}text-bg-dark
+        {% else %}text-bg-secondary{% endif %}">
+        {{ quiz.get_state_display }}
+      </span>
+      <span class="text-secondary">{{ player_count }} deltager{{ player_count|pluralize:"e" }}</span>
+    </div>
+
+    {% if question %}
+      <p class="mb-1">
+        <strong>Spørgsmål {{ question.order }} af {{ question_count }}</strong>
+      </p>
+      <p class="text-secondary mb-3">
+        Facit: {{ question.correct_artist }} ({{ question.correct_year }})
+      </p>
+    {% endif %}
+
+    {% if quiz.state == 'open' %}
+      <div class="alert alert-success py-2 text-center fs-5">
+        <strong>{{ answered_count }}</strong> af {{ player_count }} har svaret
+      </div>
+    {% endif %}
+
+    <form hx-post="{% url 'core:host_action' %}" hx-target="closest div.card" hx-swap="outerHTML">
+      {% csrf_token %}
+      {% if quiz.state == 'waiting' %}
+        <button name="action" value="interlude" class="btn btn-primary btn-lg w-100">
+          Start (vis første interlude)
+        </button>
+      {% elif quiz.state == 'interlude' %}
+        <p class="text-center text-secondary mb-2">
+          Gør klip {{ question.order }} klar på laptoppen
+        </p>
+        <button name="action" value="open" class="btn btn-success btn-lg w-100">
+          Åbn spørgsmål {{ question.order }}
+        </button>
+      {% elif quiz.state == 'open' %}
+        <p class="text-center text-secondary mb-2">
+          Spil klip {{ question.order }} fra laptoppen
+        </p>
+        <button name="action" value="close" class="btn btn-warning btn-lg w-100">
+          Luk svar og vis facit
+        </button>
+      {% elif quiz.state == 'revealed' %}
+        {% if is_last_question %}
+          <button name="action" value="interlude" class="btn btn-dark btn-lg w-100">
+            Afslut quizzen
+          </button>
+        {% else %}
+          <button name="action" value="interlude" class="btn btn-primary btn-lg w-100">
+            Næste interlude
+          </button>
+        {% endif %}
+      {% elif quiz.state == 'finished' %}
+        <p class="text-center text-secondary mb-0">Quizzen er slut</p>
+      {% endif %}
+    </form>
+
+    {% if quiz.state != 'waiting' %}
+      <form hx-post="{% url 'core:host_action' %}" hx-target="closest div.card"
+            hx-swap="outerHTML" hx-confirm="Gå et trin tilbage?" class="d-grid mt-3">
+        {% csrf_token %}
+        <button name="action" value="back" class="btn btn-outline-secondary btn-sm">
+          Et trin tilbage
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</div>

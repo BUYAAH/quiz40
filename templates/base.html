@@ -1,0 +1,41 @@
+{% load static %}<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Fødselsdagsfesten{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/quiz.css' %}">
+</head>
+<body class="bg-light">
+  {% block navbar %}
+  <nav class="navbar navbar-expand navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'pages:home' %}">Buyaah 40</a>
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'pages:home' %}">Hjem</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'core:play' %}">Quiz</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'drinky:play' %}">Drinky</a>
+        </li>
+        {% if user.is_authenticated %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'core:host_panel' %}">Quiz-vært</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'drinky:host_panel' %}">Drinky-vært</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+  {% endblock %}
+  {% block content %}{% endblock %}
+  <script src="{% static 'vendor/htmx.min.js' %}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,38 @@
+{# Drinky host control fragment: create/open/close rounds, live submitted counter. #}
+<div class="drinky-host">
+  <div class="d-flex justify-content-end mb-3">
+    <span class="text-secondary">{{ player_count }} deltager{{ player_count|pluralize:"e" }}</span>
+  </div>
+
+  {% if open_round %}
+    <div class="alert alert-success py-2 text-center fs-5 mb-3">
+      {{ open_round }} åben – <strong>{{ submitted_count }}</strong> af {{ player_count }} har indtastet
+    </div>
+  {% endif %}
+
+  <form hx-post="{% url 'drinky:host_action' %}" hx-target="closest div.drinky-host" hx-swap="outerHTML" class="mb-3">
+    {% csrf_token %}
+    <input type="text" class="form-control mb-2" name="title" maxlength="50"
+           placeholder="Titel (valgfri, fx et klokkeslæt som 15.00)">
+    <button name="action" value="create" class="btn btn-primary btn-lg w-100">Opret ny runde</button>
+  </form>
+
+  <div class="list-group">
+    {% for round in rounds %}
+      <div class="list-group-item d-flex justify-content-between align-items-center">
+        <span>{{ round }}</span>
+        <form hx-post="{% url 'drinky:host_action' %}" hx-target="closest div.drinky-host" hx-swap="outerHTML" class="mb-0">
+          {% csrf_token %}
+          <input type="hidden" name="round_id" value="{{ round.id }}">
+          {% if round.open %}
+            <button name="action" value="close" class="btn btn-warning btn-sm">Luk</button>
+          {% else %}
+            <button name="action" value="open" class="btn btn-success btn-sm">Åbn</button>
+          {% endif %}
+        </form>
+      </div>
+    {% empty %}
+      <p class="text-secondary text-center">Ingen runder endnu.</p>
+    {% endfor %}
+  </div>
+</div>

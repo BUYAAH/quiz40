@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Drinky-vært – Fødselsdagsfesten{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 34rem;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="fw-bold">Drinky-vært</span>
+  </div>
+  <div hx-get="{% url 'drinky:host_state' %}" hx-trigger="load, every 2s" hx-swap="innerHTML">
+    <div class="text-center text-secondary py-5">Indlæser…</div>
+  </div>
+</div>
+{% endblock %}

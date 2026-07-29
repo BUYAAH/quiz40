@@ -1,0 +1,22 @@
+
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import path, include
+
+from core import views as core_views
+
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('accounts/', include('accounts.urls')),
+    # Site-wide guest registration; the views live in core (the shared app).
+    path('velkommen/', core_views.welcome, name='welcome'),
+    path('profil/', core_views.demographics, name='demographics'),
+    path('drinky/', include('core.drinky_urls')),
+    path('quiz/', include('core.urls')),
+    path('', include('pages.urls')),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

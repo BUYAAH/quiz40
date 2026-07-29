@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Værtspanel – Fødselsdagsquiz{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 34rem;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="fw-bold">Værtspanel</span>
+    {% if quiz %}<span class="text-secondary">{{ quiz.name }}</span>{% endif %}
+  </div>
+  {% if quiz %}
+    <div hx-get="{% url 'core:host_state' %}" hx-trigger="load, every 2s" hx-swap="innerHTML">
+      <div class="text-center text-secondary py-5">Indlæser…</div>
+    </div>
+  {% else %}
+    <div class="alert alert-warning">
+      Ingen quiz endnu – opret en i <a href="/admin/">admin</a>.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

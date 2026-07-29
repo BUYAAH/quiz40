@@ -1,0 +1,118 @@
+/* Guest phone UI: big tap targets for a dim, festive room. */
+.option-label {
+    font-size: 1.15rem;
+    padding: 0.9rem 1rem;
+}
+
+input[type="number"].year-input {
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+/* Projector (shown on a 50" TV): very large type, high contrast, dark room.
+   Type is sized in vh so it fills the screen identically at any resolution
+   (1080p or 4K) regardless of OS display scaling. */
+.projector {
+    position: fixed;
+    inset: 0;
+    background: #111;
+    color: #fff;
+    overflow: hidden;
+    cursor: none;  /* no mouse pointer on the big screen */
+}
+
+.proj-center {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4vh 4vw;  /* keeps content clear of TV overscan cropping */
+}
+
+.proj-title { font-size: 7vh; font-weight: 700; }
+.proj-sub   { font-size: 3.5vh; }
+.proj-dim   { font-size: 2.8vh; color: #aaa; }
+.proj-year  { color: #ffd54f; }
+
+.proj-image {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+}
+
+/* Interlude: optional title above the picture; the image takes the rest. */
+.proj-interlude {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1.5vh;
+    padding: 3vh 3vw;
+}
+
+.proj-interlude .proj-title {
+    width: 100%;
+    text-align: center;
+}
+
+.proj-interlude .proj-image {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.proj-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5vh;
+    margin-top: 3vh;
+    width: 90vw;
+}
+
+.proj-option {
+    font-size: 4vh;
+    font-weight: 600;
+    background: #2b2b2b;
+    border-radius: 2vh;
+    padding: 2.5vh 2vw;
+}
+
+.proj-board {
+    margin-top: 3vh;
+    font-size: 3.4vh;
+    border-collapse: separate;
+    border-spacing: 3vw 0.6vh;
+}
+
+.proj-rank   { color: #aaa; text-align: right; }
+.proj-points { font-weight: 700; text-align: right; }
+.proj-winner { color: #ffd54f; font-weight: 700; }
+
+/* Drinky results: same dark TV backdrop, but a light card for the charts
+   (Chart.js reads better on a light background) and a real mouse pointer,
+   since the host clicks between tabs here rather than just watching. */
+.drinky-projector {
+    min-height: 100vh;
+    background: #111;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4vh 2vw;
+}
+
+.drinky-results {
+    width: min(90vw, 60rem);
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+.drinky-results canvas {
+    max-height: 55vh;
+}

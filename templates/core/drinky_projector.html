@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Drinky – Resultater{% endblock %}
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="drinky-projector">
+  <div class="drinky-results card shadow-sm">
+    <div class="card-body">
+      <h1 class="h3 text-center mb-4">Drinky – resultater</h1>
+
+      {% if not chart_data.round_labels %}
+        <p class="text-secondary text-center">Ingen data endnu – opret og luk mindst én runde.</p>
+      {% else %}
+        <ul class="nav nav-tabs mb-3" id="drinkyTabs">
+          <li class="nav-item"><button type="button" class="nav-link active" data-tab="overall">Gennemsnit</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-tab="relation">Efter relation</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-tab="kids">Efter antal børn</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-tab="kids-bar">Efter antal børn (søjler)</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-tab="gender">Efter køn</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-tab="age">Efter alder</button></li>
+        </ul>
+
+        <div class="tab-pane" data-pane="overall">
+          <canvas id="chart-overall"></canvas>
+        </div>
+        <div class="tab-pane d-none" data-pane="relation">
+          <canvas id="chart-relation"></canvas>
+        </div>
+        <div class="tab-pane d-none" data-pane="kids">
+          <canvas id="chart-kids"></canvas>
+        </div>
+        <div class="tab-pane d-none" data-pane="kids-bar">
+          <canvas id="chart-kids-bar"></canvas>
+        </div>
+        <div class="tab-pane d-none" data-pane="gender">
+          <canvas id="chart-gender"></canvas>
+        </div>
+        <div class="tab-pane d-none" data-pane="age">
+          <canvas id="chart-age"></canvas>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{{ chart_data|json_script:"drinky-chart-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'vendor/chart.min.js' %}"></script>
+<script>
+(function () {
+  var dataEl = document.getElementById('drinky-chart-data');
+  if (!dataEl) return;
+  var data = JSON.parse(dataEl.textContent);
+
+  document.querySelectorAll('#drinkyTabs .nav-link').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('#drinkyTabs .nav-link').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.add('d-none'); });
+      btn.classList.add('active');
+      document.querySelector('[data-pane="' + btn.dataset.tab + '"]').classList.remove('d-none');
+    });
+  });
+
+  var yAxis = { min: 0, suggestedMax: 2 };
+
+  function lineChart(canvasId, series, colors) {
+    new Chart(document.getElementById(canvasId), {
+      type: 'line',
+      data: {
+        labels: data.round_labels,
+        datasets: Object.keys(series).map(function (label, i) {
+          return {
+            label: label,
+            data: series[label],
+            borderColor: colors[i % colors.length],
+            spanGaps: true,
+          };
+        }),
+      },
+      options: { scales: { y: yAxis } },
+    });
+  }
+
+  new Chart(document.getElementById('chart-overall'), {
+    type: 'line',
+    data: {
+      labels: data.round_labels,
+      datasets: [{ label: 'Gennemsnit', data: data.overall_series, borderColor: '#0d6efd', spanGaps: true }],
+    },
+    options: { scales: { y: yAxis } },
+  });
+
+  lineChart('chart-relation', data.relation_series, ['#0d6efd', '#dc3545', '#198754']);
+  lineChart('chart-kids', data.kids_series, ['#0d6efd', '#dc3545', '#198754', '#ffc107', '#6f42c1']);
+  lineChart('chart-gender', data.gender_series, ['#0d6efd', '#dc3545']);
+  lineChart('chart-age', data.age_series, ['#0d6efd', '#dc3545', '#198754', '#ffc107']);
+
+  var roundColors = ['#0d6efd', '#dc3545', '#198754', '#ffc107', '#6f42c1', '#20c997', '#fd7e14', '#6610f2', '#d63384', '#0dcaf0'];
+
+  function groupedBarChart(canvasId, series) {
+    // Transposed vs. the line charts: x-axis is the group (e.g. "0 børn",
+    // "1 barn", ...), and each round gets its own bar within each group.
+    var categoryLabels = Object.keys(series);
+    new Chart(document.getElementById(canvasId), {
+      type: 'bar',
+      data: {
+        labels: categoryLabels,
+        datasets: data.round_labels.map(function (roundLabel, ri) {
+          return {
+            label: roundLabel,
+            data: categoryLabels.map(function (catLabel) { return series[catLabel][ri]; }),
+            backgroundColor: roundColors[ri % roundColors.length],
+          };
+        }),
+      },
+      options: { scales: { y: yAxis } },
+    });
+  }
+
+  groupedBarChart('chart-kids-bar', data.kids_series);
+})();
+</script>
+{% endblock %}

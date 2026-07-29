@@ -1,0 +1,67 @@
+{# Projector fragment. Music is played manually from the laptop, not the page. #}
+<div id="proj-state">
+
+  {% if quiz.state == 'waiting' %}
+    <div class="proj-center">
+      <h1 class="proj-title">{{ quiz.name }}</h1>
+      <p class="proj-sub">Gå til <strong>buyaah.dk</strong> på din telefon og vær med!</p>
+      <p class="proj-dim">{{ player_count }} deltager{{ player_count|pluralize:"e" }} klar</p>
+    </div>
+
+  {% elif quiz.state == 'interlude' %}
+    {% if question.interlude_title or question.interlude_image %}
+      <div class="proj-interlude">
+        {% if question.interlude_title %}
+          <h1 class="proj-title">{{ question.order }}: {{ question.interlude_title }}</h1>
+        {% endif %}
+        {% if question.interlude_image %}
+          <img class="proj-image" src="{{ question.interlude_image.url }}" alt="">
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="proj-center"><h1 class="proj-title">{{ quiz.name }}</h1></div>
+    {% endif %}
+
+  {% elif quiz.state == 'open' %}
+    <div class="proj-center">
+      <p class="proj-dim">Spørgsmål {{ question.order }}</p>
+      <h1 class="proj-title">Hvem synger – og hvilket år?</h1>
+      <div class="proj-options">
+        {% for value, label in question.options %}
+          <div class="proj-option">{{ label }}</div>
+        {% endfor %}
+      </div>
+      <p class="proj-sub mt-4">{{ answered_count }} af {{ player_count }} har svaret</p>
+    </div>
+
+  {% elif quiz.state == 'revealed' %}
+    <div class="proj-center">
+      <p class="proj-dim">Spørgsmål {{ question.order }} – facit</p>
+      <h1 class="proj-title">{{ question.correct_artist }} <span class="proj-year">({{ question.correct_year }})</span></h1>
+      <table class="proj-board">
+        {% for row in leaderboard %}
+          <tr>
+            <td class="proj-rank">{{ row.rank }}.</td>
+            <td>{{ row.nickname }}</td>
+            <td class="proj-points">{{ row.total }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+  {% elif quiz.state == 'finished' %}
+    <div class="proj-center">
+      <h1 class="proj-title">Slutstilling</h1>
+      <table class="proj-board">
+        {% for row in leaderboard %}
+          <tr {% if row.rank == 1 %}class="proj-winner"{% endif %}>
+            <td class="proj-rank">{{ row.rank }}.</td>
+            <td>{{ row.nickname }}</td>
+            <td class="proj-points">{{ row.total }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <p class="proj-sub mt-4">Tak fordi I var med!</p>
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,89 @@
+{# Guest state fragment. Re-polls itself; server returns 204 while nothing changed, #}
+{# so form input is never wiped mid-typing. #}
+<div id="play-state"
+     hx-get="{% url 'core:play_state' %}?s={{ state_token }}"
+     hx-trigger="every 2s"
+     hx-swap="outerHTML">
+
+  {% if quiz.state == 'waiting' %}
+    <div class="text-center py-5">
+      <p class="lead mt-3">Du er med, {{ player.nickname }}!</p>
+      <p class="text-secondary">Quizzen starter snart…</p>
+    </div>
+
+  {% elif quiz.state == 'interlude' %}
+    <div class="text-center py-4">
+      {% if question.interlude_title %}
+        <h2 class="h4 mb-3">{{ question.interlude_title }}</h2>
+      {% endif %}
+      {% if question.interlude_image %}
+        <img src="{{ question.interlude_image.url }}" class="img-fluid rounded mb-3" alt="">
+      {% endif %}
+      {% if not question.interlude_title and not question.interlude_image %}
+        <p class="lead mt-3">Kig op – der bliver holdt tale!</p>
+      {% endif %}
+      <p class="text-secondary">
+        Du har <strong>{{ score }}</strong> point · nr. <strong>{{ rank }}</strong> af {{ player_count }}
+      </p>
+    </div>
+
+  {% elif quiz.state == 'open' and question %}
+    <form hx-post="{% url 'core:submit_answer' %}" hx-target="#play-state" hx-swap="outerHTML">
+      {% csrf_token %}
+      <h2 class="h5 mb-3">Hvem synger?</h2>
+      <div class="d-grid gap-2 mb-4">
+        {% for value, label in question.options %}
+          <input type="radio" class="btn-check" name="option" id="option-{{ value }}"
+                 value="{{ value }}" {% if answer and answer.chosen_option == value %}checked{% endif %} required>
+          <label class="btn btn-outline-primary option-label" for="option-{{ value }}">{{ label }}</label>
+        {% endfor %}
+      </div>
+      <h2 class="h5 mb-2">Hvilket år er sangen fra?</h2>
+      <input type="number" class="form-control form-control-lg year-input mb-3" name="year"
+             min="1000" max="9999" placeholder="fx 1986" inputmode="numeric"
+             value="{% if answer %}{{ answer.guessed_year }}{% endif %}" required>
+      {% if error %}<div class="alert alert-warning py-2">{{ error }}</div>{% endif %}
+      {% if saved %}
+        <div class="alert alert-success py-2">
+          Dit svar er gemt – du kan ændre det, indtil spørgsmålet lukkes.
+        </div>
+      {% endif %}
+      <button type="submit" class="btn btn-primary btn-lg w-100">
+        {% if answer %}Opdatér svar{% else %}Gem svar{% endif %}
+      </button>
+    </form>
+
+  {% elif quiz.state == 'revealed' and question %}
+    <div class="text-center py-4">
+      <p class="text-secondary mb-1">Rigtigt svar</p>
+      <h2 class="h4">{{ question.correct_artist }} ({{ question.correct_year }})</h2>
+      {% if answer %}
+        <div class="card my-3">
+          <div class="card-body">
+            <p class="mb-1">Kunstner: <strong>+{{ answer.artist_points }}</strong> point</p>
+            <p class="mb-1">Årstal ({{ answer.guessed_year }}): <strong>+{{ answer.year_points }}</strong> point</p>
+            <hr>
+            <p class="mb-0 fs-5">I alt: <strong>+{{ answer.total_points }}</strong> point</p>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-secondary my-3">Du nåede ikke at svare denne gang.</p>
+      {% endif %}
+      <p class="lead">
+        Du har <strong>{{ score }}</strong> point · nr. <strong>{{ rank }}</strong> af {{ player_count }}
+      </p>
+    </div>
+
+  {% elif quiz.state == 'finished' %}
+    <div class="text-center py-5">
+      <p class="lead mt-3">Quizzen er slut!</p>
+      <p class="fs-5">
+        Du fik <strong>{{ score }}</strong> point og blev nr. <strong>{{ rank }}</strong> af {{ player_count }}.
+      </p>
+      <p class="text-secondary">Tak fordi du var med!</p>
+    </div>
+
+  {% else %}
+    <div class="text-center text-secondary py-5">Et øjeblik…</div>
+  {% endif %}
+</div>

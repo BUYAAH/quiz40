@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Log ind{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 24rem;">
+  <h1 class="h4 mb-4 text-center">Log ind som vært</h1>
+  <form method="post" class="card shadow-sm">
+    <div class="card-body">
+      {% csrf_token %}
+      {% if form.errors %}
+        <div class="alert alert-danger py-2">Forkert brugernavn eller adgangskode.</div>
+      {% endif %}
+      <label for="id_username" class="form-label">Brugernavn</label>
+      <input type="text" name="username" id="id_username" class="form-control mb-3"
+             required autofocus>
+      <label for="id_password" class="form-label">Adgangskode</label>
+      <input type="password" name="password" id="id_password" class="form-control mb-3" required>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-primary w-100">Log ind</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
