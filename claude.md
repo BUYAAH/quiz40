@@ -51,7 +51,10 @@ the host's User model.
   including the Chart.js font and legend sizes, since the page is read from ~10 m
   away on a 40" TV; each chart is built lazily the first time its tab is shown,
   because Chart.js measures its container at construction and a still-hidden pane
-  measures 0. **Aggregate-only, by design**:
+  measures 0. Series cross to the page as ordered `[[label, values], ...]` lists
+  rather than `{label: values}` objects: JavaScript hoists index-like object keys
+  ahead of the rest, so a bucket labelled "2" jumped to the front of the x-axis
+  while "0-1" and "3+" stayed in place. **Aggregate-only, by design**:
   no guest is ever named, and any group average built from fewer than
   `DRINKY_MIN_GROUP_SIZE` (2) readings is dropped so a tiny bucket can't single
   someone out — this is the "decide deliberately how small a group may be shown"

@@ -581,10 +581,17 @@ def drinky_host_action(request):
 # --- Drinky results (projector) -------------------------------------------------
 
 
+# Series are emitted as an ordered [[label, values], ...] list rather than a
+# {label: values} object on purpose. They are serialised to JSON for the chart
+# page, and JavaScript reorders object keys that look like array indices ahead
+# of the rest — a label like "2" would jump to the front of the x-axis while
+# "0-1" and "3+" stayed put. A list has no such rule.
+
+
 def _drinky_series_by(rounds, player_field, value_label_pairs):
-    """{label: [avg-or-None per round]} for a Player field, aggregated per round.
-    Any (round, group) average built from fewer than DRINKY_MIN_GROUP_SIZE
-    readings is dropped so it can't single someone out."""
+    """[[label, [avg-or-None per round]], ...] for a Player field, aggregated
+    per round. Any (round, group) average built from fewer than
+    DRINKY_MIN_GROUP_SIZE readings is dropped so it can't single someone out."""
     rows = (
         DrinkyReading.objects
         .values('round__number', f'player__{player_field}')
@@ -595,10 +602,10 @@ def _drinky_series_by(rounds, player_field, value_label_pairs):
         (row['round__number'], row[f'player__{player_field}']): float(row['avg'])
         for row in rows
     }
-    return {
-        label: [lookup.get((round_obj.number, value)) for round_obj in rounds]
+    return [
+        [label, [lookup.get((round_obj.number, value)) for round_obj in rounds]]
         for value, label in value_label_pairs
-    }
+    ]
 
 
 # Edit freely — the labels are what the chart's x-axis shows, and the Q objects
@@ -644,10 +651,10 @@ def _drinky_bracket_series(rounds, brackets):
         .filter(n__gte=DRINKY_MIN_GROUP_SIZE)
     )
     lookup = {(row['round__number'], row['bracket']): float(row['avg']) for row in rows}
-    return {
-        label: [lookup.get((round_obj.number, label)) for round_obj in rounds]
+    return [
+        [label, [lookup.get((round_obj.number, label)) for round_obj in rounds]]
         for label, _ in brackets
-    }
+    ]
 
 
 def _drinky_chart_data():

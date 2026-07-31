@@ -592,6 +592,12 @@ class DrinkyResultsTests(TestCase):
         for (round_obj, player), value in readings.items():
             DrinkyReading.objects.create(round=round_obj, player=player, value=value)
 
+    def series(self, data, key):
+        """Chart series are ordered [[label, values], ...] lists so the x-axis
+        order survives JSON; the assertions below only need lookup by label."""
+        self.assertIsInstance(data[key], list)
+        return dict(data[key])
+
     def bucket_of(self, player, brackets):
         """The bracket label this player's readings land in, asked of the same
         CASE expression the charts use. Lets the tests below say "the bucket p1
@@ -626,23 +632,41 @@ class DrinkyResultsTests(TestCase):
     def test_relation_series_grouped_correctly(self):
         from .views import _drinky_chart_data
         data = _drinky_chart_data()
-        self.assertAlmostEqual(data['relation_series']['Ven'][0], 1.10)
-        self.assertAlmostEqual(data['relation_series']['Familie'][0], 0.60)
-        self.assertIsNone(data['relation_series']['Badminton'][0])
+        relation = self.series(data, 'relation_series')
+        self.assertAlmostEqual(relation['Ven'][0], 1.10)
+        self.assertAlmostEqual(relation['Familie'][0], 0.60)
+        self.assertIsNone(relation['Badminton'][0])
 
     def test_kids_series_grouped_per_round(self):
         from .views import DRINKY_KIDS_BRACKETS, _drinky_chart_data
         data = _drinky_chart_data()
+        kids = self.series(data, 'kids_series')
         childless = self.bucket_of(self.p1, DRINKY_KIDS_BRACKETS)  # p1, p2: 0 kids
         two_kids = self.bucket_of(self.p3, DRINKY_KIDS_BRACKETS)   # p3, p4: 2 kids
         self.assertNotEqual(childless, two_kids)
-        self.assertAlmostEqual(data['kids_series'][childless][0], 1.10)
-        self.assertAlmostEqual(data['kids_series'][childless][1], 1.60)
-        self.assertAlmostEqual(data['kids_series'][two_kids][0], 0.60)
-        self.assertAlmostEqual(data['kids_series'][two_kids][1], 1.00)
+        self.assertAlmostEqual(kids[childless][0], 1.10)
+        self.assertAlmostEqual(kids[childless][1], 1.60)
+        self.assertAlmostEqual(kids[two_kids][0], 0.60)
+        self.assertAlmostEqual(kids[two_kids][1], 1.00)
         for label, _ in DRINKY_KIDS_BRACKETS:
             if label not in (childless, two_kids):
-                self.assertEqual(data['kids_series'][label], [None, None])
+                self.assertEqual(kids[label], [None, None])
+
+    def test_series_keep_their_bracket_order(self):
+        # The x-axis order comes straight from this list. Emitted as a JSON
+        # object instead, JavaScript would hoist an index-like label such as
+        # "2" ahead of "0-1" and "3+" when reading the keys back.
+        from .views import DRINKY_AGE_BRACKETS, DRINKY_KIDS_BRACKETS, _drinky_chart_data
+        data = _drinky_chart_data()
+        for key, brackets in (
+            ('kids_series', DRINKY_KIDS_BRACKETS),
+            ('age_series', DRINKY_AGE_BRACKETS),
+        ):
+            self.assertIsInstance(data[key], list)
+            self.assertEqual(
+                [label for label, _ in data[key]],
+                [label for label, _ in brackets],
+            )
 
     def test_kids_brackets_cover_every_allowed_count(self):
         # Same gap guard as the age brackets: a kid count matching no bracket
@@ -666,10 +690,11 @@ class DrinkyResultsTests(TestCase):
     def test_gender_series_grouped_per_round(self):
         from .views import _drinky_chart_data
         data = _drinky_chart_data()
-        self.assertAlmostEqual(data['gender_series']['Mand'][0], 0.75)
-        self.assertAlmostEqual(data['gender_series']['Mand'][1], 1.20)
-        self.assertAlmostEqual(data['gender_series']['Kvinde'][0], 0.95)
-        self.assertAlmostEqual(data['gender_series']['Kvinde'][1], 1.40)
+        gender = self.series(data, 'gender_series')
+        self.assertAlmostEqual(gender['Mand'][0], 0.75)
+        self.assertAlmostEqual(gender['Mand'][1], 1.20)
+        self.assertAlmostEqual(gender['Kvinde'][0], 0.95)
+        self.assertAlmostEqual(gender['Kvinde'][1], 1.40)
 
     def test_age_series_grouped_per_round(self):
         # Keyed off DRINKY_AGE_BRACKETS by position rather than by label, so
@@ -678,12 +703,13 @@ class DrinkyResultsTests(TestCase):
         from .views import DRINKY_AGE_BRACKETS, _drinky_chart_data
         labels = [label for label, _ in DRINKY_AGE_BRACKETS]
         data = _drinky_chart_data()
-        self.assertAlmostEqual(data['age_series'][labels[0]][0], 1.10)
-        self.assertAlmostEqual(data['age_series'][labels[0]][1], 1.60)
-        self.assertAlmostEqual(data['age_series'][labels[-1]][0], 0.60)
-        self.assertAlmostEqual(data['age_series'][labels[-1]][1], 1.00)
+        age = self.series(data, 'age_series')
+        self.assertAlmostEqual(age[labels[0]][0], 1.10)
+        self.assertAlmostEqual(age[labels[0]][1], 1.60)
+        self.assertAlmostEqual(age[labels[-1]][0], 0.60)
+        self.assertAlmostEqual(age[labels[-1]][1], 1.00)
         for label in labels[1:-1]:
-            self.assertEqual(data['age_series'][label], [None, None])
+            self.assertEqual(age[label], [None, None])
 
     def test_age_brackets_cover_every_allowed_age(self):
         # Anyone matching no bracket silently vanishes from the chart, so guard
@@ -714,11 +740,12 @@ class DrinkyResultsTests(TestCase):
         solo_a = self.bucket_of(self.p3, DRINKY_KIDS_BRACKETS)
         solo_b = self.bucket_of(self.p4, DRINKY_KIDS_BRACKETS)
         self.assertNotEqual(solo_a, solo_b)
-        self.assertEqual(data['kids_series'][solo_a], [None, None])
-        self.assertEqual(data['kids_series'][solo_b], [None, None])
+        kids = self.series(data, 'kids_series')
+        self.assertEqual(kids[solo_a], [None, None])
+        self.assertEqual(kids[solo_b], [None, None])
         childless = self.bucket_of(self.p1, DRINKY_KIDS_BRACKETS)
-        self.assertAlmostEqual(data['kids_series'][childless][0], 1.10)
-        self.assertAlmostEqual(data['kids_series'][childless][1], 1.60)
+        self.assertAlmostEqual(kids[childless][0], 1.10)
+        self.assertAlmostEqual(kids[childless][1], 1.60)
 
     def test_three_and_four_kids_share_a_bucket(self):
         # The merge has to happen before the min-group-size filter: on their own
@@ -732,12 +759,13 @@ class DrinkyResultsTests(TestCase):
         data = _drinky_chart_data()
         many_kids = self.bucket_of(self.p3, DRINKY_KIDS_BRACKETS)
         self.assertEqual(many_kids, self.bucket_of(self.p4, DRINKY_KIDS_BRACKETS))
-        self.assertAlmostEqual(data['kids_series'][many_kids][0], 0.60)
-        self.assertAlmostEqual(data['kids_series'][many_kids][1], 1.00)
+        kids = self.series(data, 'kids_series')
+        self.assertAlmostEqual(kids[many_kids][0], 0.60)
+        self.assertAlmostEqual(kids[many_kids][1], 1.00)
         childless = self.bucket_of(self.p1, DRINKY_KIDS_BRACKETS)
         for label, _ in DRINKY_KIDS_BRACKETS:
             if label not in (many_kids, childless):
-                self.assertEqual(data['kids_series'][label], [None, None])
+                self.assertEqual(kids[label], [None, None])
 
 
 class SeedDrinkyCommandTests(TestCase):

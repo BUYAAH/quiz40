@@ -97,18 +97,19 @@
   var roundColors = ['#0d6efd', '#dc3545', '#198754', '#ffc107', '#6f42c1', '#20c997', '#fd7e14', '#6610f2', '#d63384', '#0dcaf0'];
 
   function groupedBarChart(canvasId, series) {
-    // x-axis is the group (e.g. "0 børn", "1 barn", ...), and each round gets
-    // its own bar within each group. Groups dropped for being too small simply
-    // have no bar for that round.
-    var categoryLabels = Object.keys(series);
+    // x-axis is the group ("0-1", "2", "3+", ...), and each round gets its own
+    // bar within each group. Groups dropped for being too small simply have no
+    // bar for that round. `series` is an ordered [[label, values], ...] list,
+    // not an object — see the note in views.py: JavaScript would reorder
+    // index-like keys such as "2" to the front of the x-axis.
     return new Chart(document.getElementById(canvasId), {
       type: 'bar',
       data: {
-        labels: categoryLabels,
+        labels: series.map(function (group) { return group[0]; }),
         datasets: data.round_labels.map(function (roundLabel, ri) {
           return {
             label: roundLabel,
-            data: categoryLabels.map(function (catLabel) { return series[catLabel][ri]; }),
+            data: series.map(function (group) { return group[1][ri]; }),
             backgroundColor: roundColors[ri % roundColors.length],
           };
         }),
