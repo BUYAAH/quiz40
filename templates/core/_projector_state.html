@@ -44,7 +44,10 @@
             <div class="proj-chart-col{% if opt.correct %} proj-chart-col-correct{% endif %}">
               <span class="proj-chart-count">{{ opt.count }}</span>
               <div class="proj-chart-track">
-                <div class="proj-chart-bar{% if opt.correct %} proj-chart-bar-correct{% endif %}" style="height: {{ opt.pct }}%"></div>
+                {# No bar at all for zero picks: min-height would draw a stub. #}
+                {% if opt.count %}
+                  <div class="proj-chart-bar{% if opt.correct %} proj-chart-bar-correct{% endif %}" style="height: {{ opt.pct }}%"></div>
+                {% endif %}
               </div>
               <span class="proj-chart-label{% if opt.correct %} proj-chart-label-correct{% endif %}">{{ opt.label }}</span>
             </div>
