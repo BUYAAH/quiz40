@@ -93,7 +93,8 @@ class Player(models.Model):
     class Relation(models.TextChoices):
         FAMILY = 'family', 'Familie'
         FRIEND = 'friend', 'Ven'
-        BADMINTON = 'badminton', 'Badminton'
+        # Stored value stays 'badminton' — only the label guests see changed.
+        BADMINTON = 'badminton', 'Grindsted'
 
     nickname = models.CharField(max_length=30, unique=True)
     # Stored in a cookie so a refreshed/dropped phone rejoins with score intact.

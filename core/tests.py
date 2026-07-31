@@ -728,7 +728,7 @@ class DrinkyResultsTests(TestCase):
         relation = self.series(data, 'relation_series')
         self.assertAlmostEqual(relation['Ven'][0], 1.10)
         self.assertAlmostEqual(relation['Familie'][0], 0.60)
-        self.assertIsNone(relation['Badminton'][0])
+        self.assertIsNone(relation['Grindsted'][0])
 
     def test_kids_series_grouped_per_round(self):
         from .views import DRINKY_KIDS_BRACKETS, _drinky_chart_data

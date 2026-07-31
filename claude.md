@@ -31,7 +31,7 @@ the host's User model.
   broke once the party stopped starting with the quiz.
 - **Demographics (built):** right after signup, guests land on `/profil/` — four
   quick questions: age (validated 25-75), gender, number of kids (0-4), relation to
-  the host (Familie / Ven / Badminton). **Required, not skippable**: `player_required`
+  the host (Familie / Ven / Grindsted). **Required, not skippable**: `player_required`
   (the same decorator gating every guest-facing view) redirects any registered guest
   with incomplete demographics to `/profil/?next=<where they were headed>` until it's
   filled in — so nobody reaches home, the quiz, or any future feature first. No edit
