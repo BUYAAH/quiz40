@@ -217,6 +217,28 @@ def demographics(request):
     })
 
 
+# --- Party start screen ---------------------------------------------------------
+
+
+def start(request):
+    """Full-screen arrival screen for the projector: how to join, plus a live
+    count of who has. Public (no login, like the projector pages) and tied to no
+    single feature — it is what is on the big screen before whichever activity
+    the evening opens with."""
+    return render(request, 'core/start.html')
+
+
+def start_state(request):
+    """Polled fragment: how many have registered, and — while a Drinky round is
+    open — how many have entered a reading in it."""
+    open_round = _drinky_open_round()
+    return render(request, 'core/_start_state.html', {
+        'player_count': Player.objects.count(),
+        'open_round': open_round,
+        'submitted_count': open_round.readings.count() if open_round else None,
+    })
+
+
 def _drinky_open_round():
     return DrinkyRound.objects.filter(open=True).first()
 
@@ -536,16 +558,16 @@ def projector_state(request):
 
 
 def _render_drinky_host_state(request):
+    """Round controls only. The live "X of Y have submitted" counter used to
+    live here, but the panel had to poll to keep it current, and the periodic
+    swap wiped the new-round title input as the host typed. The counter is on
+    /start/ now, so this fragment only re-renders on a host action."""
     rounds = DrinkyRound.objects.order_by('-number')
     open_round = next((round_obj for round_obj in rounds if round_obj.open), None)
-    context = {
+    return render(request, 'core/_drinky_host_state.html', {
         'rounds': rounds,
         'open_round': open_round,
-        'player_count': Player.objects.count(),
-    }
-    if open_round is not None:
-        context['submitted_count'] = open_round.readings.count()
-    return render(request, 'core/_drinky_host_state.html', context)
+    })
 
 
 @login_required

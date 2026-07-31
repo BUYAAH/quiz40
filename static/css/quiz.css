@@ -34,6 +34,50 @@ input[type="number"].year-input {
 .proj-sub   { font-size: 3.5vh; }
 .proj-dim   { font-size: 2.8vh; color: #aaa; }
 
+/* Arrival screen (/start/): has to be read from up to ~15 m on a 40" TV, which
+   is about the limit of what that screen size can carry — so the address gets
+   most of the height and everything else is deliberately secondary.
+
+   Sized off `--u` rather than vh directly. On a 16:9 landscape screen `--u`
+   equals exactly 1vh, so these numbers read as vh; on a narrower screen (the
+   portrait-rotated TV under consideration) it falls back to the width, which
+   shrinks the type to fit instead of letting the long lines overflow. */
+.proj-start {
+    --u: min(1vh, 0.5625vw);
+    justify-content: space-evenly;
+    padding: 2vh 3vw;
+}
+
+.proj-start .proj-title { font-size: calc(10 * var(--u)); margin: 0; }
+
+.proj-start-url {
+    font-size: calc(24 * var(--u));
+    font-weight: 700;
+    color: #ffd54f;
+    line-height: 1;
+    margin: 0;
+}
+
+.proj-start-counts {
+    display: flex;
+    flex-direction: column;
+    gap: calc(2 * var(--u));
+}
+
+/* Registered guests: dim, it only matters while people are still arriving. */
+.proj-start-count {
+    font-size: calc(5 * var(--u));
+    color: #aaa;
+    margin: 0;
+}
+
+/* Open Drinky round: full white and larger, since this is the live thing the
+   room is actually waiting on whenever it is shown at all. */
+.proj-start-round {
+    font-size: calc(7 * var(--u));
+    margin: 0;
+}
+
 .proj-image {
     width: 100vw;
     height: 100vh;

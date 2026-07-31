@@ -12,6 +12,23 @@ demographics, the quiz, and Drinky); `pages` serves the home page; `accounts` ho
 the host's User model.
 
 ## Party features beyond the quiz
+- **Start screen (built):** `/start/` is the projector's arrival screen — the
+  address `rethrow.dk` as a huge hero line and nothing else static; the host
+  explains joining verbally rather than the screen listing steps. Under it, two
+  htmx-polled counters: registered guests, and (only while a Drinky round is
+  open) that round's "X af Y har pustet" progress, so the same screen can stay
+  up during the first Drinky rounds. Public, no login, no navbar, same projector
+  styling as the other big-screen pages. Sized to be read from ~15 m on a 40" TV, which is roughly
+  that screen's limit: only the address is genuinely legible that far back, and
+  the rest is deliberately secondary rather than uniformly scaled up. Its type
+  keys off a `--u` custom property (`min(1vh, 0.5625vw)`) which equals 1vh on a
+  16:9 screen but falls back to width on a narrower one, so the portrait-TV
+  question below doesn't make these lines overflow. It belongs to **no single
+  feature** deliberately: the view sits in `core` with the URL at the site root
+  (like `/velkommen/` and `/profil/`), so the evening can open with Drinky, the
+  quiz, or anything added later without the join instructions living inside the
+  wrong app. It previously lived in the quiz projector's `waiting` state, which
+  broke once the party stopped starting with the quiz.
 - **Demographics (built):** right after signup, guests land on `/profil/` — four
   quick questions: age (validated 25-75), gender, number of kids (0-4), relation to
   the host (Familie / Ven / Badminton). **Required, not skippable**: `player_required`
@@ -29,12 +46,16 @@ the host's User model.
   the round appears — including the results charts' round labels, so the time-series
   reads as an actual timeline of the evening rather than arbitrary round numbers.
   Opening a round auto-closes any other open one — only one is ever live at a time.
+  The host panel is **not** polled: it holds the new-round title input, and a
+  periodic htmx swap wiped whatever was being typed into it. It renders once on
+  load and again after each host action, and shows only which round is open. The
+  live submitted-counter it used to carry now lives on `/start/`, which has no
+  inputs to clobber.
   While a round is open, guests on `/drinky/` (gated by `player_required`, htmx-polled
   like the quiz) enter a promille reading from 0.00 to 2.99, with a nudge to rinse
   their mouth with a non-alcoholic drink first for an accurate reading and to answer
   honestly since results are anonymous; **one-shot** — the first submission per round
-  locks it, no edits. The host panel shows a live "X of Y have submitted" counter,
-  same polling pattern as the quiz host panel. Results live at `/drinky/projektor/`
+  locks it, no edits. Results live at `/drinky/projektor/`
   (public, no login, like the quiz projector) — the host opens it manually whenever
   they're ready to reveal, no auto-trigger. It renders Chart.js charts (vendored
   locally at `static/vendor/chart.min.js`, one deliberate exception to the
@@ -116,7 +137,8 @@ Each round:
   played manually from local files, outside the app). Cycles through: interlude
   picture (during speech) → question → reveal + leaderboard. Also shows the
   answered-counter while a question is open. No navbar (all other pages share a
-  Bootstrap navbar from base.html).
+  Bootstrap navbar from base.html). Its `waiting` state is only a title card —
+  the join instructions live on `/start/` (see below), not repeated here.
 - **UI language:** Danish for everything guest- and projector-facing. Code, comments,
   admin, and commit messages in English.
 

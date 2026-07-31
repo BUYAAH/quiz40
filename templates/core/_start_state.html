@@ -1,0 +1,8 @@
+{# Arrival screen counters: guests registered, plus any open Drinky round. #}
+<div class="proj-start-counts">
+  <p class="proj-start-count">{{ player_count }} deltager{{ player_count|pluralize:"e" }} klar</p>
+
+  {% if open_round %}
+    <p class="proj-start-round">{{ open_round }}: {{ submitted_count }} af {{ player_count }} har pustet</p>
+  {% endif %}
+</div>

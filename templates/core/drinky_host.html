@@ -7,7 +7,13 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <span class="fw-bold">Drinky-vært</span>
   </div>
-  <div hx-get="{% url 'drinky:host_state' %}" hx-trigger="load, every 2s" hx-swap="innerHTML">
+  {% comment %}
+    Loaded once, then only re-rendered in response to the host's own actions.
+    Deliberately not polled: this panel contains the new-round title input, and
+    a periodic swap wiped whatever the host was typing into it. Nothing here
+    changes on its own any more — the live counters moved to /start/.
+  {% endcomment %}
+  <div hx-get="{% url 'drinky:host_state' %}" hx-trigger="load" hx-swap="innerHTML">
     <div class="text-center text-secondary py-5">Indlæser…</div>
   </div>
 </div>

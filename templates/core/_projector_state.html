@@ -2,10 +2,10 @@
 <div id="proj-state">
 
   {% if quiz.state == 'waiting' %}
+    {# Just a title card: the join guide lives on /start/. #}
     <div class="proj-center">
       <h1 class="proj-title">{{ quiz.name }}</h1>
-      <p class="proj-sub">Gå til <strong>buyaah.dk</strong> på din telefon og vær med!</p>
-      <p class="proj-dim">{{ player_count }} deltager{{ player_count|pluralize:"e" }} klar</p>
+      <p class="proj-sub">Vi starter om lidt...</p>
     </div>
 
   {% elif quiz.state == 'interlude' %}

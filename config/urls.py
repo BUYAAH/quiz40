@@ -13,6 +13,9 @@ urlpatterns = [
     # Site-wide guest registration; the views live in core (the shared app).
     path('velkommen/', core_views.welcome, name='welcome'),
     path('profil/', core_views.demographics, name='demographics'),
+    # Projector arrival screen, belonging to no single feature.
+    path('start/', core_views.start, name='start'),
+    path('start/status/', core_views.start_state, name='start_state'),
     path('drinky/', include('core.drinky_urls')),
     path('quiz/', include('core.urls')),
     path('', include('pages.urls')),

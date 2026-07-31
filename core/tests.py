@@ -1,5 +1,8 @@
+import re
 from decimal import Decimal
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
@@ -433,6 +436,84 @@ class ProjectorTests(TestCase):
         )
         self.assertContains(response, 'Anna')
 
+    def test_waiting_state_does_not_repeat_the_join_guide(self):
+        # The guide moved to /start/; the quiz's own waiting screen is only a
+        # title card, so the two screens can't drift apart.
+        self.quiz.state = Quiz.State.WAITING
+        self.quiz.save()
+        response = self.client.get(reverse('core:projector_state'))
+        self.assertContains(response, self.quiz.name)
+        self.assertNotContains(response, 'rethrow.dk')
+
+
+class TemplateCommentTests(TestCase):
+    def test_no_template_comment_spans_multiple_lines(self):
+        # Django's {# #} comment is single-line only: if the closing #} is on a
+        # later line, the whole thing renders as visible text on the page
+        # instead of disappearing. Multi-line notes need {% comment %} blocks.
+        offenders, scanned = [], 0
+        for template_dir in settings.TEMPLATES[0]['DIRS']:
+            root = Path(settings.BASE_DIR) / template_dir
+            for path in sorted(root.rglob('*.html')):
+                scanned += 1
+                for lineno, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+                    if '{#' in line and not re.search(r'\{#.*#\}', line):
+                        offenders.append(f'{path.name}:{lineno}')
+        # Guard against the check passing simply because it found no templates.
+        self.assertGreater(scanned, 0)
+        self.assertEqual(offenders, [])
+
+
+class StartScreenTests(TestCase):
+    def test_needs_no_login(self):
+        response = self.client.get(reverse('start'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_shows_the_join_guide(self):
+        response = self.client.get(reverse('start'))
+        self.assertContains(response, 'rethrow.dk')
+
+    def test_state_counts_registered_players(self):
+        for nickname in ('Anna', 'Bo'):
+            Player.objects.create(nickname=nickname)
+        response = self.client.get(reverse('start_state'))
+        self.assertContains(response, '2 deltagere klar')
+
+    def test_state_uses_singular_for_one_player(self):
+        Player.objects.create(nickname='Anna')
+        response = self.client.get(reverse('start_state'))
+        self.assertContains(response, '1 deltager klar')
+
+    def test_state_works_with_no_players_and_no_quiz(self):
+        # The arrival screen is up before anything else exists; it must not
+        # depend on a Quiz or DrinkyRound having been created yet.
+        self.assertFalse(Player.objects.exists())
+        response = self.client.get(reverse('start_state'))
+        self.assertContains(response, '0 deltagere klar')
+
+    def test_state_shows_open_drinky_round_progress(self):
+        for nickname in ('Anna', 'Bo', 'Carl'):
+            Player.objects.create(nickname=nickname)
+        round_obj = DrinkyRound.objects.create(number=1, open=True)
+        DrinkyReading.objects.create(
+            round=round_obj, player=Player.objects.first(), value='0.50',
+        )
+        response = self.client.get(reverse('start_state'))
+        self.assertContains(response, f'{round_obj}: 1 af 3 har pustet')
+
+    def test_state_uses_the_rounds_title_when_it_has_one(self):
+        Player.objects.create(nickname='Anna')
+        DrinkyRound.objects.create(number=1, title='15.00', open=True)
+        response = self.client.get(reverse('start_state'))
+        self.assertContains(response, '15.00: 0 af 1 har pustet')
+
+    def test_state_hides_drinky_line_when_no_round_is_open(self):
+        Player.objects.create(nickname='Anna')
+        DrinkyRound.objects.create(number=1, open=False)
+        response = self.client.get(reverse('start_state'))
+        self.assertContains(response, '1 deltager klar')
+        self.assertNotContains(response, 'har pustet')
+
 
 class ScoringTests(TestCase):
     def test_compute_points(self):
@@ -555,15 +636,27 @@ class DrinkyHostTests(TestCase):
         r1.refresh_from_db()
         self.assertFalse(r1.open)
 
-    def test_submitted_counter(self):
-        round_obj = DrinkyRound.objects.create(number=1, open=True)
-        for nickname in ('Anna', 'Bo'):
-            DrinkyReading.objects.create(
-                round=round_obj, player=make_player(nickname=nickname), value='1.00'
-            )
-        make_player(nickname='Carl')  # registered, hasn't submitted
+    def test_open_round_is_flagged(self):
+        DrinkyRound.objects.create(number=1, open=True)
         response = self.client.get(reverse('drinky:host_state'))
-        self.assertContains(response, '2</strong> af 3 har indtastet')
+        self.assertContains(response, 'er åben')
+
+    def test_panel_carries_no_live_counter(self):
+        # The counter moved to /start/. It must not come back here: showing it
+        # would mean polling this fragment again, and the periodic swap wipes
+        # the new-round title input while the host is typing in it.
+        round_obj = DrinkyRound.objects.create(number=1, open=True)
+        DrinkyReading.objects.create(
+            round=round_obj, player=make_player(nickname='Anna'), value='1.00'
+        )
+        response = self.client.get(reverse('drinky:host_state'))
+        self.assertNotContains(response, 'har indtastet')
+        self.assertNotContains(response, 'har pustet')
+
+    def test_panel_does_not_poll_itself(self):
+        response = self.client.get(reverse('drinky:host_panel'))
+        self.assertContains(response, 'hx-trigger="load"')
+        self.assertNotContains(response, 'every 2s')
 
 
 class DrinkyResultsTests(TestCase):

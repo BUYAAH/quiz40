@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Velkommen til festen{% endblock %}
+
+{# Full-screen arrival screen for the projector: no navbar on the big screen. #}
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div class="projector">
+  <div class="proj-center proj-start">
+    <h1 class="proj-title">Velkommen til festen!</h1>
+
+    {% comment %}
+      The address is the one thing that has to carry to the back of the room,
+      so it gets a line of its own at several times the size of everything
+      else. Everything else about joining is said out loud by the host.
+    {% endcomment %}
+    <p class="proj-start-url">rethrow.dk</p>
+
+    {# Only the counters change, so only they are polled. #}
+    <div hx-get="{% url 'start_state' %}" hx-trigger="load, every 2s" hx-swap="innerHTML">
+    </div>
+  </div>
+</div>
+{% endblock %}

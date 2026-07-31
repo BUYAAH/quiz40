@@ -1,12 +1,8 @@
-{# Drinky host control fragment: create/open/close rounds, live submitted counter. #}
+{# Drinky host controls: create/open/close rounds. Counters live on /start/. #}
 <div class="drinky-host">
-  <div class="d-flex justify-content-end mb-3">
-    <span class="text-secondary">{{ player_count }} deltager{{ player_count|pluralize:"e" }}</span>
-  </div>
-
   {% if open_round %}
     <div class="alert alert-success py-2 text-center fs-5 mb-3">
-      {{ open_round }} åben – <strong>{{ submitted_count }}</strong> af {{ player_count }} har indtastet
+      <strong>{{ open_round }}</strong> er åben
     </div>
   {% endif %}
 
