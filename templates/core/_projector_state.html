@@ -25,7 +25,7 @@
   {% elif quiz.state == 'open' %}
     <div class="proj-center">
       <p class="proj-dim">Spørgsmål {{ question.order }}</p>
-      <h1 class="proj-title">Hvem synger – og hvilket år?</h1>
+      <h1 class="proj-title">Hvem er artisten bag nummeret – og hvilket år?</h1>
       <div class="proj-options">
         {% for value, label in question.options %}
           <div class="proj-option">{{ label }}</div>
@@ -36,17 +36,49 @@
 
   {% elif quiz.state == 'revealed' %}
     <div class="proj-center">
-      <p class="proj-dim">Spørgsmål {{ question.order }} – facit</p>
-      <h1 class="proj-title">{{ question.correct_artist }} <span class="proj-year">({{ question.correct_year }})</span></h1>
-      <table class="proj-board">
-        {% for row in leaderboard %}
-          <tr>
-            <td class="proj-rank">{{ row.rank }}.</td>
-            <td>{{ row.nickname }}</td>
-            <td class="proj-points">{{ row.total }}</td>
-          </tr>
-        {% endfor %}
-      </table>
+      <h1 class="proj-title proj-title-sm proj-correct-heading">{{ question.correct_artist }} ({{ question.correct_year }})</h1>
+
+      <div class="proj-panel proj-chart-panel">
+        <div class="proj-chart">
+          {% for opt in option_breakdown %}
+            <div class="proj-chart-col{% if opt.correct %} proj-chart-col-correct{% endif %}">
+              <span class="proj-chart-count">{{ opt.count }}</span>
+              <div class="proj-chart-track">
+                <div class="proj-chart-bar{% if opt.correct %} proj-chart-bar-correct{% endif %}" style="height: {{ opt.pct }}%"></div>
+              </div>
+              <span class="proj-chart-label{% if opt.correct %} proj-chart-label-correct{% endif %}">{{ opt.label }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="proj-reveal-cols">
+        <div class="proj-panel proj-reveal-col">
+          <p class="proj-section-title">Rundens topscorer{{ round_winners|length|pluralize:"e" }}</p>
+          {% if round_winners %}
+            <ul class="proj-winner-list">
+              {% for winner in round_winners %}
+                <li>{{ winner.nickname }} <span class="proj-points">+{{ winner.points }}p</span></li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="proj-sub">Ingen fik point denne runde</p>
+          {% endif %}
+        </div>
+        <div class="proj-reveal-divider"></div>
+        <div class="proj-panel proj-reveal-col">
+          <p class="proj-section-title">Stilling</p>
+          <table class="proj-board proj-board-sm">
+            {% for row in leaderboard %}
+              <tr>
+                <td class="proj-rank">{{ row.rank }}.</td>
+                <td>{{ row.nickname }}</td>
+                <td class="proj-points">{{ row.total }}</td>
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
     </div>
 
   {% elif quiz.state == 'finished' %}

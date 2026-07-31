@@ -1,0 +1,51 @@
+/* Site-wide warm theme: cream background + terracotta accent, replacing
+   Bootstrap's default gray/blue. Bootstrap 5.3 hardcodes most component
+   colors as literal hex inside each ruleset (not var(--bs-primary)), so the
+   button/focus rules below re-declare those custom properties directly
+   rather than relying on a single root override. */
+:root {
+  --bs-dark-rgb: 61, 50, 41;       /* #3D3229 warm brown: navbar (.bg-dark) + finished-state badge (.text-bg-dark) */
+  --bs-primary-rgb: 193, 110, 81;  /* #C16E51 terracotta */
+  --bs-link-color-rgb: 168, 84, 58;
+  --bs-link-hover-color-rgb: 140, 68, 46;
+}
+
+body {
+  background-color: #F7F3EA;
+}
+
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #C16E51;
+  --bs-btn-border-color: #C16E51;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #A8593F;
+  --bs-btn-hover-border-color: #9C5239;
+  --bs-btn-focus-shadow-rgb: 193, 110, 81;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #9C5239;
+  --bs-btn-active-border-color: #8F4B34;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #C16E51;
+  --bs-btn-disabled-border-color: #C16E51;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: #C16E51;
+  --bs-btn-border-color: #C16E51;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #C16E51;
+  --bs-btn-hover-border-color: #C16E51;
+  --bs-btn-focus-shadow-rgb: 193, 110, 81;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #C16E51;
+  --bs-btn-active-border-color: #C16E51;
+  --bs-btn-disabled-color: #C16E51;
+  --bs-btn-disabled-border-color: #C16E51;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #D9A78E;
+  box-shadow: 0 0 0 .25rem rgba(193, 110, 81, .25);
+}

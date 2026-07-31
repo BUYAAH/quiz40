@@ -17,9 +17,8 @@ the host's User model.
   the host (Familie / Ven / Badminton). **Required, not skippable**: `player_required`
   (the same decorator gating every guest-facing view) redirects any registered guest
   with incomplete demographics to `/profil/?next=<where they were headed>` until it's
-  filled in — so nobody reaches home, the quiz, or any future feature first. A
-  low-key "tastede du forkert?" link on the home page lets a guest fix a typo
-  afterwards; there's no other edit entry point. Stored as optional-at-the-model-level
+  filled in — so nobody reaches home, the quiz, or any future feature first. No edit
+  entry point after that: a misclick stands. Stored as optional-at-the-model-level
   fields on `Player`
   (`demographics_done` property); `welcome()` also routes returning players there
   directly if incomplete.
@@ -115,7 +114,7 @@ Each round:
 - **Database: MySQL in production, SQLite for local dev.** PythonAnywhere's network
   storage makes SQLite locking unreliable under concurrent writes (35 guests submitting
   in the same seconds). Paid plan includes MySQL.
-- **Hosting:** PythonAnywhere, paid plan, custom domain **buyaah.dk**. Standard WSGI
+- **Hosting:** PythonAnywhere, paid plan, custom domain **rethrow.dk**. Standard WSGI
   setup; static/media served via PythonAnywhere's static file mappings.
 - **Audio:** ~30s pre-trimmed clips live as local files on the projector laptop and
   are played manually (VLC or similar), named/ordered to match question order. The
@@ -145,3 +144,12 @@ Each round:
   player) on the real PythonAnywhere deployment well before the party.
 - Nickname policy: globally unique (case-insensitive); host can rename/remove via
   admin. Pre-party testing occupies nicknames — clear test Players before the party.
+- Considering turning the 40" projector/TV on its side for a portrait ("high")
+  viewport (raised 2026-07-30, testing on the real TV 2026-07-31). The projector
+  CSS (`static/css/quiz.css`) sizes type almost entirely in `vh`, tuned for 16:9
+  landscape — flipping to portrait roughly doubles effective height vs width, so
+  text would render much larger than intended and layouts like the reveal bar
+  chart / 4-option question grid would look cramped sideways. Not broken outright
+  (text wraps, flex/grid adapt), but not tuned for it either. If portrait is kept
+  after testing, revisit the sizing (e.g. `clamp()`/`min(vw, vh)`) rather than
+  leaving it as-is.

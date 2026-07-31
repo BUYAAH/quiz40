@@ -7,18 +7,11 @@ from core.views import player_required
 TOPICS = [
     {
         'title': 'Quiz',
-        'description': 'Musikquizzen – gæt kunstner og årstal.',
         'url_name': 'core:play',
     },
     {
         'title': 'Drinky',
-        'description': 'Mål din promille i løbet af aftenen.',
         'url_name': 'drinky:play',
-    },
-    {
-        'title': 'Funstuff3',
-        'description': 'Kommer snart …',
-        'url_name': None,
     },
 ]
 

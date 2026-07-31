@@ -5,32 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Fødselsdagsfesten{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
   <link rel="stylesheet" href="{% static 'css/quiz.css' %}">
 </head>
-<body class="bg-light">
+<body>
   {% block navbar %}
-  <nav class="navbar navbar-expand navbar-dark bg-dark">
+  <nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'pages:home' %}">Buyaah 40</a>
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'pages:home' %}">Hjem</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'core:play' %}">Quiz</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'drinky:play' %}">Drinky</a>
-        </li>
-        {% if user.is_authenticated %}
+      <a class="navbar-brand mb-0" href="{% url 'pages:home' %}">Martin 40</a>
+      {% if user.is_authenticated %}
+      <ul class="navbar-nav flex-row gap-3">
         <li class="nav-item">
           <a class="nav-link" href="{% url 'core:host_panel' %}">Quiz-vært</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'drinky:host_panel' %}">Drinky-vært</a>
         </li>
-        {% endif %}
       </ul>
+      {% endif %}
     </div>
   </nav>
   {% endblock %}

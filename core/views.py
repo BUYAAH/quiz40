@@ -440,6 +440,42 @@ def host_action(request):
 # --- Projector ----------------------------------------------------------------
 
 
+def _option_breakdown(question):
+    """Per-option answer share for the reveal screen's proportion bars."""
+    counts = dict(
+        question.answers.values('chosen_option').annotate(n=Count('id')).values_list('chosen_option', 'n')
+    )
+    total = sum(counts.values())
+    return [
+        {
+            'label': label,
+            'count': counts.get(value, 0),
+            'pct': round(100 * counts.get(value, 0) / total) if total else 0,
+            'correct': value == question.correct_option,
+        }
+        for value, label in question.options
+    ]
+
+
+def _round_winners(question):
+    """Nickname(s) with the most points on this question (shared on a tie);
+    empty if nobody scored."""
+    answers = list(
+        question.answers
+        .annotate(round_points=F('artist_points') + F('year_points'))
+        .filter(round_points__gt=0)
+        .select_related('player')
+        .order_by('-round_points')
+    )
+    if not answers:
+        return []
+    top = answers[0].round_points
+    return [
+        {'nickname': answer.player.nickname, 'points': top}
+        for answer in answers if answer.round_points == top
+    ]
+
+
 def _leaderboard(quiz, limit=10):
     """Ranked totals with shared placement ("1224" competition ranking).
     All registered guests appear; no answers means 0 points."""
@@ -473,7 +509,11 @@ def _render_projector_state(request, quiz):
     }
     if quiz.state == Quiz.State.QUESTION_OPEN:
         context['answered_count'] = quiz.current_question.answers.count()
-    if quiz.state in (Quiz.State.REVEALED, Quiz.State.FINISHED):
+    if quiz.state == Quiz.State.REVEALED:
+        context['leaderboard'] = _leaderboard(quiz, limit=3)
+        context['option_breakdown'] = _option_breakdown(quiz.current_question)
+        context['round_winners'] = _round_winners(quiz.current_question)
+    if quiz.state == Quiz.State.FINISHED:
         context['leaderboard'] = _leaderboard(quiz)
     return render(request, 'core/_projector_state.html', context)
 

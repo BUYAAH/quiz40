@@ -18,7 +18,6 @@ input[type="number"].year-input {
     background: #111;
     color: #fff;
     overflow: hidden;
-    cursor: none;  /* no mouse pointer on the big screen */
 }
 
 .proj-center {
@@ -34,7 +33,6 @@ input[type="number"].year-input {
 .proj-title { font-size: 7vh; font-weight: 700; }
 .proj-sub   { font-size: 3.5vh; }
 .proj-dim   { font-size: 2.8vh; color: #aaa; }
-.proj-year  { color: #ffd54f; }
 
 .proj-image {
     width: 100vw;
@@ -93,6 +91,124 @@ input[type="number"].year-input {
 .proj-rank   { color: #aaa; text-align: right; }
 .proj-points { font-weight: 700; text-align: right; }
 .proj-winner { color: #ffd54f; font-weight: 700; }
+
+/* Reveal screen: correct answer + year, an answer-share bar chart, round
+   winner and a short leaderboard all share one screen (no auto-timer).
+   Each part sits in its own panel so the sections read as distinct blocks
+   from across a room, and everything is sized to actually fill the screen
+   rather than cluster in the vertical middle. */
+.proj-title-sm { font-size: 6vh; }
+.proj-correct-heading { color: #8bc34a; }
+
+.proj-panel {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 1.2vh;
+}
+
+.proj-chart-panel {
+    padding: 3vh 3vw 2vh;
+    margin-top: 3vh;
+}
+
+.proj-chart {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 4vw;
+    height: 34vh;
+}
+
+.proj-chart-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 13vw;
+    height: 100%;
+}
+
+.proj-chart-count {
+    font-size: 4.5vh;
+    font-weight: 700;
+    color: #ddd;
+    margin-bottom: 0.5vh;
+}
+
+.proj-chart-track {
+    width: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: flex-end;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid transparent;
+    border-radius: 0.6vh;
+}
+
+/* Correct option gets a full-height green outline on the track itself, so
+   it stays unmistakable even when nobody picked it and the bar is empty. */
+.proj-chart-col-correct .proj-chart-track { border-color: #8bc34a; }
+
+.proj-chart-bar {
+    width: 100%;
+    min-height: 4%;
+    background: #777;
+    border-radius: 0.4vh 0.4vh 0 0;
+}
+
+.proj-chart-bar-correct { background: #8bc34a; }
+
+.proj-chart-label {
+    margin-top: 1.2vh;
+    font-size: 2.8vh;
+    color: #ddd;
+    text-align: center;
+}
+
+.proj-chart-label-correct { color: #8bc34a; font-weight: 700; }
+
+/* Reveal screen's bottom half: round winner(s) on the left, top-3 overall
+   standings on the right, in separate panels with a divider between them
+   so the two sections don't blur together. */
+.proj-reveal-cols {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 4vw;
+    margin-top: 3vh;
+}
+
+.proj-reveal-col {
+    min-width: 24vw;
+    padding: 2.5vh 3vw;
+}
+
+.proj-reveal-divider {
+    width: 2px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.proj-section-title {
+    font-size: 3vh;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.15vh;
+    margin-bottom: 1.5vh;
+}
+
+.proj-winner-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 4vh;
+}
+
+.proj-winner-list li { margin-top: 1vh; }
+.proj-winner-list .proj-points { color: #ffd54f; }
+
+.proj-board-sm {
+    margin-top: 0;
+    font-size: 4vh;
+}
 
 /* Drinky results: same dark TV backdrop, but a light card for the charts
    (Chart.js reads better on a light background) and a real mouse pointer,

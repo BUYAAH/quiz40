@@ -30,7 +30,7 @@
   {% elif quiz.state == 'open' and question %}
     <form hx-post="{% url 'core:submit_answer' %}" hx-target="#play-state" hx-swap="outerHTML">
       {% csrf_token %}
-      <h2 class="h5 mb-3">Hvem synger?</h2>
+      <h2 class="h5 mb-3">Hvem er artisten bag nummeret?</h2>
       <div class="d-grid gap-2 mb-4">
         {% for value, label in question.options %}
           <input type="radio" class="btn-check" name="option" id="option-{{ value }}"

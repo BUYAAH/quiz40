@@ -173,12 +173,14 @@ class DemographicsTests(TestCase):
         response = self.client.get(reverse('pages:home'))
         self.assertEqual(response.status_code, 200)
 
-    def test_home_offers_lowkey_edit_link_and_resave_updates(self):
+    def test_home_offers_no_edit_link_but_direct_resave_still_works(self):
+        """By design there is no way back to the profile from home: a misclick
+        stands. The view itself still accepts a re-save if reached directly."""
         Player.objects.filter(pk=self.player.pk).update(
             age=39, gender='m', kids=3, relation='friend',
         )
         response = self.client.get(reverse('pages:home'))
-        self.assertContains(response, reverse('demographics'))
+        self.assertNotContains(response, reverse('demographics'))
 
         response = self.client.post(reverse('demographics'), {
             'age': 40, 'gender': 'm', 'kids': 3, 'relation': 'badminton',
@@ -232,7 +234,7 @@ class PlayTests(TestCase):
 
     def test_open_question_shows_answer_form(self):
         response = self.client.get(reverse('core:play_state'))
-        self.assertContains(response, 'Hvem synger?')
+        self.assertContains(response, 'Hvem er artisten bag nummeret?')
         self.assertContains(response, 'Queen')
 
     def test_poll_returns_204_when_state_unchanged(self):
