@@ -125,9 +125,11 @@ input[type="number"].year-input {
     padding: 2.5vh 2vw;
 }
 
+/* Final standings: 10 rows are the most this ever shows, so the type is sized
+   to fill the screen rather than to fit an unbounded list. */
 .proj-board {
     margin-top: 3vh;
-    font-size: 3.4vh;
+    font-size: 5vh;
     border-collapse: separate;
     border-spacing: 3vw 0.6vh;
 }
