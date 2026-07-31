@@ -154,6 +154,14 @@ Each round:
   custom stylesheet for the projector page (very large type, high contrast, dim room)
   and phone tap targets.
 - **All static assets vendored locally** (Bootstrap, htmx) — no CDNs at party time.
+- **Cache-busting: bump `?v=` in `base.html` whenever `site.css` or `quiz.css` changes.**
+  Storage is plain `StaticFilesStorage` (no hashed filenames), and PythonAnywhere's
+  static mappings send a long cache header, so an edited stylesheet otherwise stays
+  invisible on already-loaded phones and on the projector laptop until a hard refresh —
+  not something 35 guests can be asked to do mid-party. `ManifestStaticFilesStorage`
+  would automate it but 500s on any file missing from the manifest; the manual param
+  was chosen as the thing that cannot break on the night. Vendored files are exempt:
+  they never change.
 - **Database: MySQL in production, SQLite for local dev.** PythonAnywhere's network
   storage makes SQLite locking unreliable under concurrent writes (35 guests submitting
   in the same seconds). Paid plan includes MySQL.

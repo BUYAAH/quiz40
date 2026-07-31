@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Fødselsdagsfesten{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
-  <link rel="stylesheet" href="{% static 'css/site.css' %}">
-  <link rel="stylesheet" href="{% static 'css/quiz.css' %}">
+  {# Bump ?v= on every edit to our own CSS. Static files are served under a
+     fixed URL with a long cache header, so without this a phone or the
+     projector laptop keeps the old stylesheet until a hard refresh — which
+     is not something we can ask 35 guests to do mid-party. The vendored
+     files above/below need no version: they never change. #}
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'css/quiz.css' %}?v=2">
 </head>
 <body>
   {% block navbar %}
