@@ -48,8 +48,6 @@ input[type="number"].year-input {
     padding: 2vh 3vw;
 }
 
-.proj-start .proj-title { font-size: calc(10 * var(--u)); margin: 0; }
-
 .proj-start-url {
     font-size: calc(24 * var(--u));
     font-weight: 700;
