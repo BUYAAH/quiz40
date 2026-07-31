@@ -601,24 +601,44 @@ def _drinky_series_by(rounds, player_field, value_label_pairs):
     }
 
 
+# Edit freely — the labels are what the chart's x-axis shows, and the Q objects
+# decide who lands in each. Keep them exhaustive over the allowed ages (25-75)
+# and non-overlapping: the first matching bracket wins, and anyone matching none
+# is silently left out of the chart.
 DRINKY_AGE_BRACKETS = [
-    ('<=35', Q(player__age__lte=35)),
-    ('36-40', Q(player__age__gte=36, player__age__lte=40)),
-    ('41-45', Q(player__age__gte=41, player__age__lte=45)),
-    ('>=46', Q(player__age__gte=46)),
+    ('<=37', Q(player__age__lte=37)),
+    ('38-42', Q(player__age__gte=38, player__age__lte=42)),
+    ('>=43', Q(player__age__gte=43)),
+]
+
+# Same rules as the age brackets. Deliberately only three buckets: suppression
+# is applied per round, so a thin bucket doesn't just risk being empty, it risks
+# appearing in some rounds and not others, which reads as a broken chart rather
+# than as "too few people". 0 and 1 are merged because barely any guest is
+# childless, and 3 and 4 because exactly one family has 4 kids.
+DRINKY_KIDS_BRACKETS = [
+    ('0-1', Q(player__kids__lte=1)),
+    ('2', Q(player__kids=2)),
+    ('3+', Q(player__kids__gte=3)),
 ]
 
 
-def _drinky_age_series(rounds):
-    """Same idea as _drinky_series_by, but age is bucketed into brackets
-    rather than grouped by a raw field value."""
-    bracket = Case(
-        *[When(condition, then=Value(label)) for label, condition in DRINKY_AGE_BRACKETS],
+def _bracket_case(brackets):
+    """A CASE expression labelling each reading with the first bracket it
+    matches, or NULL if it matches none."""
+    return Case(
+        *[When(condition, then=Value(label)) for label, condition in brackets],
         output_field=CharField(),
     )
+
+
+def _drinky_bracket_series(rounds, brackets):
+    """Same idea as _drinky_series_by, but rows are bucketed into brackets
+    rather than grouped by a raw field value. Bucketing happens before the
+    DRINKY_MIN_GROUP_SIZE filter, so merged brackets pool their readings."""
     rows = (
         DrinkyReading.objects
-        .annotate(bracket=bracket)
+        .annotate(bracket=_bracket_case(brackets))
         .values('round__number', 'bracket')
         .annotate(avg=Avg('value'), n=Count('id'))
         .filter(n__gte=DRINKY_MIN_GROUP_SIZE)
@@ -626,7 +646,7 @@ def _drinky_age_series(rounds):
     lookup = {(row['round__number'], row['bracket']): float(row['avg']) for row in rows}
     return {
         label: [lookup.get((round_obj.number, label)) for round_obj in rounds]
-        for label, _ in DRINKY_AGE_BRACKETS
+        for label, _ in brackets
     }
 
 
@@ -645,8 +665,8 @@ def _drinky_chart_data():
 
     relation_series = _drinky_series_by(rounds, 'relation', Player.Relation.choices)
     gender_series = _drinky_series_by(rounds, 'gender', Player.Gender.choices)
-    kids_series = _drinky_series_by(rounds, 'kids', [(kids, str(kids)) for kids in range(5)])
-    age_series = _drinky_age_series(rounds)
+    kids_series = _drinky_bracket_series(rounds, DRINKY_KIDS_BRACKETS)
+    age_series = _drinky_bracket_series(rounds, DRINKY_AGE_BRACKETS)
 
     return {
         'round_labels': round_labels,

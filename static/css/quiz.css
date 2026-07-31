@@ -214,21 +214,61 @@ input[type="number"].year-input {
    (Chart.js reads better on a light background) and a real mouse pointer,
    since the host clicks between tabs here rather than just watching. */
 .drinky-projector {
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     background: #111;
     color: #fff;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4vh 2vw;
+    padding: 1vh 1vw;
 }
 
+/* Fills the screen: the chart is read from ~10 m away, so everything that
+   is not the chart itself (padding, title, tabs) is kept deliberately thin.
+   The height chain is explicit the whole way down (100vh -> card -> card-body
+   -> pane) rather than leaning on align-items: stretch, so the chart's box is
+   always a definite size when Chart.js measures it. Note `height: 100%` also
+   has to override Bootstrap's own `.card { height: var(--bs-card-height) }`. */
 .drinky-results {
-    width: min(90vw, 60rem);
-    max-height: 92vh;
-    overflow-y: auto;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.drinky-results .card-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5vh 1.5vw;
+}
+
+.drinky-results .drinky-title {
+    flex: 0 0 auto;
+    font-size: 3.5vh;
+    margin-bottom: 1.5vh;
+}
+
+.drinky-results .nav-tabs {
+    flex: 0 0 auto;
+    margin-bottom: 1.5vh;
+}
+
+.drinky-results .nav-tabs .nav-link {
+    font-size: 2.4vh;
+    padding: 0.8vh 1.4vw;
+}
+
+/* The visible pane is the chart's sizing box; the canvas is absolutely
+   positioned so Chart.js (maintainAspectRatio: false) fills it exactly. */
+.drinky-pane {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
 }
 
 .drinky-results canvas {
-    max-height: 55vh;
+    position: absolute;
+    inset: 0;
 }

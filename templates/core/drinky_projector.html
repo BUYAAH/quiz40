@@ -8,7 +8,7 @@
 <div class="drinky-projector">
   <div class="drinky-results card shadow-sm">
     <div class="card-body">
-      <h1 class="h3 text-center mb-4">Drinky – resultater</h1>
+      <h1 class="drinky-title text-center">Drinky – resultater</h1>
 
       {% if not chart_data.round_labels %}
         <p class="text-secondary text-center">Ingen data endnu – opret og luk mindst én runde.</p>
@@ -17,27 +17,23 @@
           <li class="nav-item"><button type="button" class="nav-link active" data-tab="overall">Gennemsnit</button></li>
           <li class="nav-item"><button type="button" class="nav-link" data-tab="relation">Efter relation</button></li>
           <li class="nav-item"><button type="button" class="nav-link" data-tab="kids">Efter antal børn</button></li>
-          <li class="nav-item"><button type="button" class="nav-link" data-tab="kids-bar">Efter antal børn (søjler)</button></li>
           <li class="nav-item"><button type="button" class="nav-link" data-tab="gender">Efter køn</button></li>
           <li class="nav-item"><button type="button" class="nav-link" data-tab="age">Efter alder</button></li>
         </ul>
 
-        <div class="tab-pane" data-pane="overall">
+        <div class="drinky-pane" data-pane="overall">
           <canvas id="chart-overall"></canvas>
         </div>
-        <div class="tab-pane d-none" data-pane="relation">
+        <div class="drinky-pane d-none" data-pane="relation">
           <canvas id="chart-relation"></canvas>
         </div>
-        <div class="tab-pane d-none" data-pane="kids">
+        <div class="drinky-pane d-none" data-pane="kids">
           <canvas id="chart-kids"></canvas>
         </div>
-        <div class="tab-pane d-none" data-pane="kids-bar">
-          <canvas id="chart-kids-bar"></canvas>
-        </div>
-        <div class="tab-pane d-none" data-pane="gender">
+        <div class="drinky-pane d-none" data-pane="gender">
           <canvas id="chart-gender"></canvas>
         </div>
-        <div class="tab-pane d-none" data-pane="age">
+        <div class="drinky-pane d-none" data-pane="age">
           <canvas id="chart-age"></canvas>
         </div>
       {% endif %}
@@ -56,56 +52,56 @@
   if (!dataEl) return;
   var data = JSON.parse(dataEl.textContent);
 
-  document.querySelectorAll('#drinkyTabs .nav-link').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('#drinkyTabs .nav-link').forEach(function (b) { b.classList.remove('active'); });
-      document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.add('d-none'); });
-      btn.classList.add('active');
-      document.querySelector('[data-pane="' + btn.dataset.tab + '"]').classList.remove('d-none');
-    });
-  });
+  // Everything is sized off the viewport height, like the projector CSS: this
+  // is read from ~10 m away on a 40" TV, so Chart.js's pixel defaults (12px
+  // text) are far too small.
+  var vh = window.innerHeight / 100;
+  Chart.defaults.font.size = 2.6 * vh;
+  Chart.defaults.font.weight = 'bold';
+  Chart.defaults.color = '#111';
+  Chart.defaults.elements.bar.borderWidth = 0;
 
-  var yAxis = { min: 0, suggestedMax: 2 };
-
-  function lineChart(canvasId, series, colors) {
-    new Chart(document.getElementById(canvasId), {
-      type: 'line',
-      data: {
-        labels: data.round_labels,
-        datasets: Object.keys(series).map(function (label, i) {
-          return {
-            label: label,
-            data: series[label],
-            borderColor: colors[i % colors.length],
-            spanGaps: true,
-          };
-        }),
+  // A fresh object per chart: Chart.js normalises the config it is given, so a
+  // shared options object would be mutated by whichever chart is built first.
+  function chartOptions(showLegend) {
+    return {
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: {
+          display: showLegend,
+          labels: {
+            boxWidth: 3 * vh,
+            boxHeight: 2 * vh,
+            padding: 2 * vh,
+          },
+        },
       },
-      options: { scales: { y: yAxis } },
-    });
+      scales: {
+        y: {
+          min: 0,
+          suggestedMax: 2,
+          ticks: { padding: vh },
+          grid: { lineWidth: 2 },
+        },
+        x: {
+          ticks: { padding: vh },
+          grid: { lineWidth: 2 },
+        },
+      },
+    };
   }
 
-  new Chart(document.getElementById('chart-overall'), {
-    type: 'line',
-    data: {
-      labels: data.round_labels,
-      datasets: [{ label: 'Gennemsnit', data: data.overall_series, borderColor: '#0d6efd', spanGaps: true }],
-    },
-    options: { scales: { y: yAxis } },
-  });
-
-  lineChart('chart-relation', data.relation_series, ['#0d6efd', '#dc3545', '#198754']);
-  lineChart('chart-kids', data.kids_series, ['#0d6efd', '#dc3545', '#198754', '#ffc107', '#6f42c1']);
-  lineChart('chart-gender', data.gender_series, ['#0d6efd', '#dc3545']);
-  lineChart('chart-age', data.age_series, ['#0d6efd', '#dc3545', '#198754', '#ffc107']);
-
+  // One colour per round, shared by every chart, so a given round is the same
+  // colour on whichever tab you are looking at.
   var roundColors = ['#0d6efd', '#dc3545', '#198754', '#ffc107', '#6f42c1', '#20c997', '#fd7e14', '#6610f2', '#d63384', '#0dcaf0'];
 
   function groupedBarChart(canvasId, series) {
-    // Transposed vs. the line charts: x-axis is the group (e.g. "0 børn",
-    // "1 barn", ...), and each round gets its own bar within each group.
+    // x-axis is the group (e.g. "0 børn", "1 barn", ...), and each round gets
+    // its own bar within each group. Groups dropped for being too small simply
+    // have no bar for that round.
     var categoryLabels = Object.keys(series);
-    new Chart(document.getElementById(canvasId), {
+    return new Chart(document.getElementById(canvasId), {
       type: 'bar',
       data: {
         labels: categoryLabels,
@@ -117,11 +113,67 @@
           };
         }),
       },
-      options: { scales: { y: yAxis } },
+      options: chartOptions(true),
     });
   }
 
-  groupedBarChart('chart-kids-bar', data.kids_series);
+  // Each chart is built the first time its tab is shown, never earlier: Chart.js
+  // measures its container at construction time, and a pane that is still
+  // display:none measures 0, which is what made charts come out at arbitrary
+  // heights. Showing an already-built chart just re-measures it.
+  var builders = {
+    'overall': function () {
+      // The only chart with no groups: one bar per round. All bars are the same
+      // blue on purpose — it is one population measured over time, so colouring
+      // per round would imply a split that isn't there. No legend either, since
+      // the x-axis already names every bar.
+      return new Chart(document.getElementById('chart-overall'), {
+        type: 'bar',
+        data: {
+          labels: data.round_labels,
+          datasets: [{
+            label: 'Gennemsnit',
+            data: data.overall_series,
+            backgroundColor: '#0d6efd',
+          }],
+        },
+        options: chartOptions(false),
+      });
+    },
+    'relation': function () {
+      return groupedBarChart('chart-relation', data.relation_series);
+    },
+    'kids': function () {
+      return groupedBarChart('chart-kids', data.kids_series);
+    },
+    'gender': function () {
+      return groupedBarChart('chart-gender', data.gender_series);
+    },
+    'age': function () {
+      return groupedBarChart('chart-age', data.age_series);
+    },
+  };
+  var charts = {};
+
+  function showPane(name) {
+    document.querySelectorAll('#drinkyTabs .nav-link').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.tab === name);
+    });
+    document.querySelectorAll('.drinky-pane').forEach(function (p) {
+      p.classList.toggle('d-none', p.dataset.pane !== name);
+    });
+    if (charts[name]) {
+      charts[name].resize();
+    } else {
+      charts[name] = builders[name]();
+    }
+  }
+
+  document.querySelectorAll('#drinkyTabs .nav-link').forEach(function (btn) {
+    btn.addEventListener('click', function () { showPane(btn.dataset.tab); });
+  });
+
+  showPane('overall');
 })();
 </script>
 {% endblock %}

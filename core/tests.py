@@ -592,6 +592,20 @@ class DrinkyResultsTests(TestCase):
         for (round_obj, player), value in readings.items():
             DrinkyReading.objects.create(round=round_obj, player=player, value=value)
 
+    def bucket_of(self, player, brackets):
+        """The bracket label this player's readings land in, asked of the same
+        CASE expression the charts use. Lets the tests below say "the bucket p1
+        is in" instead of hardcoding a label, so re-tuning the brackets moves
+        the fixtures to another bucket rather than breaking the assertions."""
+        from .views import _bracket_case
+        return (
+            DrinkyReading.objects
+            .filter(player=player)
+            .annotate(bracket=_bracket_case(brackets))
+            .values_list('bracket', flat=True)
+            .first()
+        )
+
     def test_projector_needs_no_login(self):
         response = self.client.get(reverse('drinky:projector'))
         self.assertEqual(response.status_code, 200)
@@ -617,13 +631,37 @@ class DrinkyResultsTests(TestCase):
         self.assertIsNone(data['relation_series']['Badminton'][0])
 
     def test_kids_series_grouped_per_round(self):
-        from .views import _drinky_chart_data
+        from .views import DRINKY_KIDS_BRACKETS, _drinky_chart_data
         data = _drinky_chart_data()
-        self.assertAlmostEqual(data['kids_series']['0'][0], 1.10)
-        self.assertAlmostEqual(data['kids_series']['0'][1], 1.60)
-        self.assertAlmostEqual(data['kids_series']['2'][0], 0.60)
-        self.assertAlmostEqual(data['kids_series']['2'][1], 1.00)
-        self.assertEqual(data['kids_series']['1'], [None, None])
+        childless = self.bucket_of(self.p1, DRINKY_KIDS_BRACKETS)  # p1, p2: 0 kids
+        two_kids = self.bucket_of(self.p3, DRINKY_KIDS_BRACKETS)   # p3, p4: 2 kids
+        self.assertNotEqual(childless, two_kids)
+        self.assertAlmostEqual(data['kids_series'][childless][0], 1.10)
+        self.assertAlmostEqual(data['kids_series'][childless][1], 1.60)
+        self.assertAlmostEqual(data['kids_series'][two_kids][0], 0.60)
+        self.assertAlmostEqual(data['kids_series'][two_kids][1], 1.00)
+        for label, _ in DRINKY_KIDS_BRACKETS:
+            if label not in (childless, two_kids):
+                self.assertEqual(data['kids_series'][label], [None, None])
+
+    def test_kids_brackets_cover_every_allowed_count(self):
+        # Same gap guard as the age brackets: a kid count matching no bracket
+        # would drop those guests from the chart with no error.
+        from .views import DRINKY_KIDS_BRACKETS, _bracket_case
+        round_obj = DrinkyRound.objects.create(number=99)
+        for kids in range(5):
+            player = make_player(nickname=f'Kids{kids}')
+            player.kids = kids
+            player.save()
+            DrinkyReading.objects.create(round=round_obj, player=player, value='1.00')
+        uncovered = (
+            DrinkyReading.objects
+            .filter(round=round_obj)
+            .annotate(bracket=_bracket_case(DRINKY_KIDS_BRACKETS))
+            .filter(bracket__isnull=True)
+            .values_list('player__kids', flat=True)
+        )
+        self.assertEqual(sorted(uncovered), [])
 
     def test_gender_series_grouped_per_round(self):
         from .views import _drinky_chart_data
@@ -634,26 +672,72 @@ class DrinkyResultsTests(TestCase):
         self.assertAlmostEqual(data['gender_series']['Kvinde'][1], 1.40)
 
     def test_age_series_grouped_per_round(self):
-        from .views import _drinky_chart_data
+        # Keyed off DRINKY_AGE_BRACKETS by position rather than by label, so
+        # retuning the brackets doesn't break this: the fixture ages (30, 32,
+        # 44, 45) only need to keep landing in the youngest and oldest ones.
+        from .views import DRINKY_AGE_BRACKETS, _drinky_chart_data
+        labels = [label for label, _ in DRINKY_AGE_BRACKETS]
         data = _drinky_chart_data()
-        self.assertAlmostEqual(data['age_series']['<=35'][0], 1.10)
-        self.assertAlmostEqual(data['age_series']['<=35'][1], 1.60)
-        self.assertAlmostEqual(data['age_series']['41-45'][0], 0.60)
-        self.assertAlmostEqual(data['age_series']['41-45'][1], 1.00)
-        self.assertEqual(data['age_series']['36-40'], [None, None])
-        self.assertEqual(data['age_series']['>=46'], [None, None])
+        self.assertAlmostEqual(data['age_series'][labels[0]][0], 1.10)
+        self.assertAlmostEqual(data['age_series'][labels[0]][1], 1.60)
+        self.assertAlmostEqual(data['age_series'][labels[-1]][0], 0.60)
+        self.assertAlmostEqual(data['age_series'][labels[-1]][1], 1.00)
+        for label in labels[1:-1]:
+            self.assertEqual(data['age_series'][label], [None, None])
+
+    def test_age_brackets_cover_every_allowed_age(self):
+        # Anyone matching no bracket silently vanishes from the chart, so guard
+        # the mistake that is easy to make when retuning them: leaving a gap.
+        from .views import DRINKY_AGE_BRACKETS, _bracket_case
+        round_obj = DrinkyRound.objects.create(number=99)
+        for age in range(25, 76):
+            player = make_player(nickname=f'Age{age}')
+            player.age = age
+            player.save()
+            DrinkyReading.objects.create(round=round_obj, player=player, value='1.00')
+        uncovered = (
+            DrinkyReading.objects
+            .filter(round=round_obj)
+            .annotate(bracket=_bracket_case(DRINKY_AGE_BRACKETS))
+            .filter(bracket__isnull=True)
+            .values_list('player__age', flat=True)
+        )
+        self.assertEqual(sorted(uncovered), [])
 
     def test_group_of_one_is_suppressed(self):
-        from .views import _drinky_chart_data
-        # Give p3 a unique kid count so its (now solo) bucket is dropped in
-        # both rounds; p4's old "2 kids" bucket becomes a solo group too.
+        # Move p3 into a different bucket than p4, leaving each of them alone in
+        # theirs; both buckets should then be dropped in both rounds.
+        from .views import DRINKY_KIDS_BRACKETS, _drinky_chart_data
         self.p3.kids = 3
         self.p3.save()
         data = _drinky_chart_data()
-        self.assertEqual(data['kids_series']['2'], [None, None])
-        self.assertEqual(data['kids_series']['3'], [None, None])
-        self.assertAlmostEqual(data['kids_series']['0'][0], 1.10)
-        self.assertAlmostEqual(data['kids_series']['0'][1], 1.60)
+        solo_a = self.bucket_of(self.p3, DRINKY_KIDS_BRACKETS)
+        solo_b = self.bucket_of(self.p4, DRINKY_KIDS_BRACKETS)
+        self.assertNotEqual(solo_a, solo_b)
+        self.assertEqual(data['kids_series'][solo_a], [None, None])
+        self.assertEqual(data['kids_series'][solo_b], [None, None])
+        childless = self.bucket_of(self.p1, DRINKY_KIDS_BRACKETS)
+        self.assertAlmostEqual(data['kids_series'][childless][0], 1.10)
+        self.assertAlmostEqual(data['kids_series'][childless][1], 1.60)
+
+    def test_three_and_four_kids_share_a_bucket(self):
+        # The merge has to happen before the min-group-size filter: on their own
+        # p3 (3 kids) and p4 (4 kids) are two groups of one and would both be
+        # dropped, but pooled they are a group of two and get shown.
+        from .views import DRINKY_KIDS_BRACKETS, _drinky_chart_data
+        self.p3.kids = 3
+        self.p3.save()
+        self.p4.kids = 4
+        self.p4.save()
+        data = _drinky_chart_data()
+        many_kids = self.bucket_of(self.p3, DRINKY_KIDS_BRACKETS)
+        self.assertEqual(many_kids, self.bucket_of(self.p4, DRINKY_KIDS_BRACKETS))
+        self.assertAlmostEqual(data['kids_series'][many_kids][0], 0.60)
+        self.assertAlmostEqual(data['kids_series'][many_kids][1], 1.00)
+        childless = self.bucket_of(self.p1, DRINKY_KIDS_BRACKETS)
+        for label, _ in DRINKY_KIDS_BRACKETS:
+            if label not in (many_kids, childless):
+                self.assertEqual(data['kids_series'][label], [None, None])
 
 
 class SeedDrinkyCommandTests(TestCase):

@@ -38,14 +38,32 @@ the host's User model.
   (public, no login, like the quiz projector) — the host opens it manually whenever
   they're ready to reveal, no auto-trigger. It renders Chart.js charts (vendored
   locally at `static/vendor/chart.min.js`, one deliberate exception to the
-  "no hand-written JS" rule, scoped to this page only) in tabs, all time-series
-  (one line per round, spanning gaps): overall average, and the same series split
-  by relation, by number of kids, by gender, and by age bracket (<=35 / 36-40 /
-  41-45 / >=46). **Aggregate-only, by design**:
+  "no hand-written JS" rule, scoped to this page only) in tabs. **All bar charts**
+  — the time-series line versions read poorly on a TV and were dropped. The four
+  grouped charts (by relation, by number of kids 0-1 / 2 / 3+, by gender, by
+  age bracket — currently <=37 / 38-42 / >=43, retunable by editing the
+  `DRINKY_AGE_BRACKETS` list in `core/views.py`) put the group on the x-axis with
+  one bar per round inside each group, with round colours shared across those four
+  tabs so a given round is the same colour on each. The overall-average chart has
+  no groups, so it is simply one bar per round, all in the same blue — it is one
+  population over time, and per-round colours would imply a split that isn't
+  there. Everything is sized off the viewport (`vh`) and fills the screen,
+  including the Chart.js font and legend sizes, since the page is read from ~10 m
+  away on a 40" TV; each chart is built lazily the first time its tab is shown,
+  because Chart.js measures its container at construction and a still-hidden pane
+  measures 0. **Aggregate-only, by design**:
   no guest is ever named, and any group average built from fewer than
   `DRINKY_MIN_GROUP_SIZE` (2) readings is dropped so a tiny bucket can't single
   someone out — this is the "decide deliberately how small a group may be shown"
-  call flagged earlier, now resolved.
+  call flagged earlier, now resolved. The kid counts collapse to three buckets
+  (0-1 / 2 / 3+) for a related but distinct reason: suppression is applied *per
+  round*, so a thin bucket doesn't merely risk being empty, it risks appearing in
+  some rounds and vanishing in others as its few members skip a reading — which
+  reads as a broken chart rather than as "too few people". Barely any guest is
+  childless and exactly one family has 4 kids, so those ends are merged inward.
+  Guests still enter their real count on `/profil/` (0-4) — only the chart
+  buckets merge, and the merge happens before the group-size filter so a pooled
+  bucket can actually clear it.
 
 - **Party date:** ~2026-07-31 (~25 days from project start on 2026-07-06)
 - **Guests:** ~35 people, playing on their own phones
