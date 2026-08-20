@@ -18,7 +18,11 @@ urlpatterns = [
     path('start/status/', core_views.start_state, name='start_state'),
     path('drinky/', include('core.drinky_urls')),
     path('quiz/', include('core.urls')),
-    path('', include('pages.urls')),
+    # Temporary for the disc golf event: the site root serves the discgolf
+    # front page, and the party home page moves aside to /fest/. Swap these
+    # two lines back after the event.
+    path('fest/', include('pages.urls')),
+    path('', include('discgolf.urls')),
 ]
 
 if settings.DEBUG:

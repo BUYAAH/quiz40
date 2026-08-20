@@ -1,0 +1,37 @@
+{% for section in sections %}
+<h3 class="h5 mt-3">{{ section.label }}</h3>
+{% if section.rows %}
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Spiller</th>
+      <th class="text-end">Kast</th>
+      <th class="text-end">Til par</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in section.rows %}
+    <tr>
+      <td>{{ row.rank }}</td>
+      <td>{{ row.player.name }}</td>
+      <td class="text-end">{{ row.player.total }}</td>
+      <td class="text-end">
+        {% if row.to_par > 0 %}+{{ row.to_par }}{% elif row.to_par == 0 %}Par{% else %}{{ row.to_par }}{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% if section.in_progress %}
+<p class="text-muted mb-1">Stadig i gang:</p>
+<ul class="list-unstyled text-muted">
+  {% for p in section.in_progress %}
+  <li>{{ p.name }} ({{ p.played }} hul{{ p.played|pluralize:"ler" }}, {{ p.total }} kast)</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% empty %}
+<p class="text-muted">Ingen har spillet endnu.</p>
+{% endfor %}

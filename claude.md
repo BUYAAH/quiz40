@@ -89,6 +89,26 @@ the host's User model.
   buckets merge, and the merge happens before the group-size filter so a pooled
   bucket can actually clear it.
 
+## Disc golf (temporary side event, 2026-08-21)
+The `discgolf` app is a standalone MVP scoring system for "Grindsted Open", a
+small one-day disc golf event unrelated to the party features. Players are
+assigned a division when added (Voksen/Barn, default Voksen), and the standings
+rank each division separately (sections only appear once someone in that
+division has a score). **The site root is temporarily
+swapped**: `/` serves the discgolf front page and the party home page moved to
+`/fest/` (see the comment in `config/urls.py`; swap back after the event). All
+other party URLs are unchanged. Flow: a group presses "Start gruppe" (creates a
+`Card` on the single `Course`), adds player names, then one phone walks through
+the holes (image, description, par, one strokes field per player), hole by hole
+with back navigation, ending in the card's results plus a day leaderboard at
+`/stilling/` (ties share placement; incomplete rounds listed separately).
+Courses/holes are authored in the Django admin only. `discgolf.Player` is
+deliberately separate from `core.Player` — no registration, just typed names.
+Cards are identified in URLs by a random 4-digit `code` (not the sequential pk,
+which groups could count up to reach each other's cards); the code is also kept
+in the session, and the navbar's "Jeres runde" link (`/runde/`) resumes at the
+first unscored hole — so navigating to "Stilling" never strands a group.
+
 - **Party date:** ~2026-07-31 (~25 days from project start on 2026-07-06)
 - **Guests:** ~35 people, playing on their own phones
 - **Questions:** 10-13 rounds, each built around a ~30s pre-trimmed song clip

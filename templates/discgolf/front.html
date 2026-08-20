@@ -1,0 +1,27 @@
+{% extends 'discgolf/base.html' %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <h1 class="display-4 mb-3">Grindsted Open</h1>
+  {% if course %}
+  <p class="lead text-muted mb-4">
+    Saml jeres gruppe, skriv jeres navne, og gå ud til hul 1.
+    En i gruppen fører scoren på sin telefon.
+  </p>
+  {% if has_card %}
+  <p class="mb-4">
+    <a href="{% url 'discgolf:resume' %}" class="btn btn-success btn-lg px-5 py-3">Fortsæt jeres runde</a>
+  </p>
+  {% endif %}
+  <form method="post" action="{% url 'discgolf:start_card' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-lg px-5 py-3">Start gruppe</button>
+  </form>
+  <p class="mt-4">
+    <a href="{% url 'discgolf:standings' %}" class="text-decoration-none">Se dagens stilling</a>
+  </p>
+  {% else %}
+  <p class="lead text-muted">Banen er ikke sat op endnu. Kom tilbage om lidt.</p>
+  {% endif %}
+</div>
+{% endblock %}

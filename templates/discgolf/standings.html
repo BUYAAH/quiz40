@@ -1,0 +1,15 @@
+{% extends 'discgolf/base.html' %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 32rem;">
+  <h1 class="h3 mb-3">Dagens stilling</h1>
+  {% if course %}
+  {% include 'discgolf/_leaderboard.html' %}
+  {% else %}
+  <p class="text-muted">Banen er ikke sat op endnu.</p>
+  {% endif %}
+  <div class="d-grid mt-4">
+    <a href="{% url 'discgolf:front' %}" class="btn btn-outline-primary">Til forsiden</a>
+  </div>
+</div>
+{% endblock %}

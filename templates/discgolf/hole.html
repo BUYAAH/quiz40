@@ -1,0 +1,45 @@
+{% extends 'discgolf/base.html' %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 32rem;">
+  <div class="d-flex justify-content-between align-items-baseline mb-2">
+    <h1 class="h3 mb-0">Hul {{ hole.number }} <span class="text-muted">· Par {{ hole.par }}</span></h1>
+    <span class="text-muted">Hul {{ hole.number }} af {{ hole_count }}</span>
+  </div>
+
+  {% if hole.image %}
+  <img src="{{ hole.image.url }}" alt="Hul {{ hole.number }}" class="img-fluid rounded mb-3">
+  {% endif %}
+  {% if hole.description %}
+  <p>{{ hole.description|linebreaksbr }}</p>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <h2 class="h5 mt-4 mb-3">Antal kast</h2>
+    {% for row in rows %}
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label class="form-label mb-0 me-3" for="strokes_{{ row.player.pk }}">{{ row.player.name }}</label>
+      <input type="number" inputmode="numeric" min="1" max="30"
+             class="form-control form-control-lg text-center" style="width: 6rem;"
+             id="strokes_{{ row.player.pk }}" name="strokes_{{ row.player.pk }}"
+             value="{{ row.strokes }}">
+    </div>
+    {% endfor %}
+    {% if error %}<div class="text-danger mb-2">{{ error }}</div>{% endif %}
+    <div class="d-grid mt-3">
+      <button type="submit" class="btn btn-primary btn-lg py-3">
+        {% if is_last %}Gem og se resultat{% else %}Gem og videre{% endif %}
+      </button>
+    </div>
+  </form>
+
+  <div class="d-flex justify-content-between mt-3">
+    {% if prev_hole %}
+    <a href="{% url 'discgolf:hole' card.code prev_hole.number %}" class="text-decoration-none">Tilbage til hul {{ prev_hole.number }}</a>
+    {% else %}
+    <a href="{% url 'discgolf:setup' card.code %}" class="text-decoration-none">Tilbage til gruppen</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

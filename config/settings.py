@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'accounts',
     'core',
     'pages',
+    'discgolf',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

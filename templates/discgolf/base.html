@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Grindsted Open{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand mb-0" href="{% url 'discgolf:front' %}">Grindsted Open</a>
+    <ul class="navbar-nav flex-row gap-3">
+      {% if request.session.discgolf_card %}
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'discgolf:resume' %}">Jeres runde</a>
+      </li>
+      {% endif %}
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'discgolf:standings' %}">Stilling</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+{% endblock %}

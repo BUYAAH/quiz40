@@ -1,0 +1,41 @@
+{% extends 'discgolf/base.html' %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 40rem;">
+  <h1 class="h3 mb-3">Jeres resultat</h1>
+
+  <div class="table-responsive mb-4">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Spiller</th>
+          {% for h in holes %}<th class="text-center">{{ h.number }}</th>{% endfor %}
+          <th class="text-end">I alt</th>
+          <th class="text-end">Til par</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.player.name }}</td>
+          {% for cell in row.cells %}
+          <td class="text-center">{{ cell|default_if_none:'-' }}</td>
+          {% endfor %}
+          <td class="text-end fw-bold">{{ row.total }}</td>
+          <td class="text-end">
+            {% if row.to_par is None %}-{% elif row.to_par > 0 %}+{{ row.to_par }}{% elif row.to_par == 0 %}Par{% else %}{{ row.to_par }}{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="h4 mb-3">Dagens stilling</h2>
+  {% include 'discgolf/_leaderboard.html' %}
+
+  <div class="d-grid mt-4">
+    <a href="{% url 'discgolf:front' %}" class="btn btn-outline-primary">Til forsiden</a>
+  </div>
+</div>
+{% endblock %}
