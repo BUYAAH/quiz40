@@ -92,7 +92,8 @@ the host's User model.
 ## Disc golf (temporary side event, 2026-08-21)
 The `discgolf` app is a standalone MVP scoring system for "Grindsted Open", a
 small one-day disc golf event unrelated to the party features. Players are
-assigned a division when added (Voksen/Barn, default Voksen), and the standings
+assigned a division when added (Voksen/Under 15, default Voksen; the stored
+value for Under 15 stays 'child'), and the standings
 rank each division separately (sections only appear once someone in that
 division has a score). **The site root is temporarily
 swapped**: `/` serves the discgolf front page and the party home page moved to

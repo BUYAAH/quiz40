@@ -51,6 +51,7 @@ class DiscgolfFlowTests(TestCase):
             r = self.client.get(url)
             self.assertContains(r, f'Hul {n}')
             self.assertContains(r, f'Beskrivelse af hul {n}')
+            self.assertContains(r, 'Regler')
             data = {f'strokes_{p.pk}': 3 + i for i, p in enumerate(players)}
             r = self.client.post(url, data)
             if n < 4:
@@ -118,12 +119,16 @@ class DiscgolfFlowTests(TestCase):
         r = self.client.get('/runde/')
         self.assertRedirects(r, f'/gruppe/{card.code}/hul/3/')
 
-        # All holes scored: resume lands on results
+        # All holes scored: resume lands on results, and the front page
+        # offers the results instead of continuing the round
         for n in [3, 4]:
             self.client.post(f'/gruppe/{card.code}/hul/{n}/',
                              {f'strokes_{p.pk}': 3 for p in players})
         r = self.client.get('/runde/')
         self.assertRedirects(r, f'/gruppe/{card.code}/resultat/')
+        r = self.client.get('/')
+        self.assertContains(r, 'Se jeres resultat')
+        self.assertNotContains(r, 'Fortsæt jeres runde')
 
     def test_navbar_resume_link_shown_after_joining_card(self):
         r = self.client.get('/')
@@ -173,7 +178,7 @@ class DiscgolfFlowTests(TestCase):
 
         r = self.client.get('/stilling/')
         sections = r.context['sections']
-        self.assertEqual([s['label'] for s in sections], ['Voksen', 'Barn'])
+        self.assertEqual([s['label'] for s in sections], ['Voksen', 'Under 15'])
         # Each division is ranked on its own: both players place 1st
         self.assertEqual(sections[0]['rows'][0]['rank'], 1)
         self.assertEqual(sections[0]['rows'][0]['player'], adult)
@@ -192,7 +197,7 @@ class DiscgolfFlowTests(TestCase):
             card.players.get(name='Anna').division, Player.Division.ADULT)
         # The child gets a badge on the group page
         r = self.client.get(f'/gruppe/{card.code}/')
-        self.assertContains(r, 'Barn')
+        self.assertContains(r, 'Under 15')
 
     def test_party_home_moved_to_fest(self):
         r = self.client.get('/fest/')

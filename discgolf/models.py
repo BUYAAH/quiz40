@@ -63,7 +63,8 @@ class Player(models.Model):
 
     class Division(models.TextChoices):
         ADULT = 'adult', 'Voksen'
-        CHILD = 'child', 'Barn'
+        # Stored value stays 'child' — only the label shown in the UI changed.
+        CHILD = 'child', 'Under 15'
 
     card = models.ForeignKey(Card, on_delete=models.CASCADE, related_name='players')
     name = models.CharField(max_length=30)

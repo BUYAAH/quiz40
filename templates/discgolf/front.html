@@ -10,7 +10,11 @@
   </p>
   {% if has_card %}
   <p class="mb-4">
+    {% if card_done %}
+    <a href="{% url 'discgolf:resume' %}" class="btn btn-outline-success btn-lg px-5 py-3">Se jeres resultat</a>
+    {% else %}
     <a href="{% url 'discgolf:resume' %}" class="btn btn-success btn-lg px-5 py-3">Fortsæt jeres runde</a>
+    {% endif %}
   </p>
   {% endif %}
   <form method="post" action="{% url 'discgolf:start_card' %}">

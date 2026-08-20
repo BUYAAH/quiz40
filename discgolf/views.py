@@ -55,13 +55,33 @@ def _leaderboard(course):
     return sections
 
 
+def _resume_target(card):
+    """Where 'Jeres runde' should land: setup before any players exist, the
+    first hole missing a score mid-round, results once everything is scored."""
+    players = list(card.players.all())
+    if not players:
+        return 'discgolf:setup', {'code': card.code}
+    counts = dict(
+        Score.objects.filter(player__in=players)
+        .values_list('hole_id')
+        .annotate(n=Count('id'))
+        .values_list('hole_id', 'n')
+    )
+    for hole in card.course.holes.all():
+        if counts.get(hole.pk, 0) < len(players):
+            return 'discgolf:hole', {'code': card.code, 'number': hole.number}
+    return 'discgolf:results', {'code': card.code}
+
+
 def front(request):
-    has_card = Card.objects.filter(
+    card = Card.objects.filter(
         code=request.session.get(SESSION_CARD_KEY, '')
-    ).exists()
+    ).first()
+    card_done = card is not None and _resume_target(card)[0] == 'discgolf:results'
     return render(request, 'discgolf/front.html', {
         'course': _course(),
-        'has_card': has_card,
+        'has_card': card is not None,
+        'card_done': card_done,
     })
 
 
@@ -83,19 +103,8 @@ def resume(request):
     ).first()
     if card is None:
         return redirect('discgolf:front')
-    players = list(card.players.all())
-    if not players:
-        return redirect('discgolf:setup', code=card.code)
-    counts = dict(
-        Score.objects.filter(player__in=players)
-        .values_list('hole_id')
-        .annotate(n=Count('id'))
-        .values_list('hole_id', 'n')
-    )
-    for hole in card.course.holes.all():
-        if counts.get(hole.pk, 0) < len(players):
-            return redirect('discgolf:hole', code=card.code, number=hole.number)
-    return redirect('discgolf:results', code=card.code)
+    viewname, kwargs = _resume_target(card)
+    return redirect(viewname, **kwargs)
 
 
 def setup(request, code):
